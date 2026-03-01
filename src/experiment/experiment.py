@@ -13,11 +13,14 @@ from src.model.trainer import Trainer
 from src.preprocessing.preprocessing import AdultPreprocessing, GermanCreditPreprocessing, LawSchoolPreprocessing, \
     Preprocessing
 from src.utils.env import REQUIRED_CONFIG_KEYS, OPTIMIZER_REGISTRY, CRITERION_REGISTRY
+from src.utils.logger import LoggerFactory
+
+logger = LoggerFactory.get_logger(name=__name__)
 
 
 class Experiment:
-    def __init__(self, config_file: Path):
-        self.config = self.load_config(config_file)
+    def __init__(self, config_path: Path):
+        self.config = self.load_config(config_path)
         self.validate_config()
         self.parse_config()
 
@@ -57,11 +60,11 @@ class Experiment:
 
     def get_prepro(self) -> Preprocessing:
         if self.config["data"]["name"] == "adult":
-            prepro = AdultPreprocessing()
+            prepro = AdultPreprocessing(self.config["data"]["sens_attr"])
         elif self.config["data"]["name"] == "german":
-            prepro = GermanCreditPreprocessing()
+            prepro = GermanCreditPreprocessing(self.config["data"]["sens_attr"])
         elif self.config["data"]["name"] == "law":
-            prepro = LawSchoolPreprocessing()
+            prepro = LawSchoolPreprocessing(self.config["data"]["sens_attr"])
         else:
             raise ValueError(f"Unknown dataset name : {self.config["data"]["name"]}")
         return prepro
@@ -72,7 +75,7 @@ class Experiment:
 
         train_loader, val_loader, test_loader = prepro.generate_loaders(prop_train=self.config["data"]["prop_train"],
                                                                         prop_valid=self.config["data"]["prop_valid"],
-                                                                        seed=self.config["seed"],
+                                                                        seed=self.config["experiment"]["seed"],
                                                                         batch_size=self.config["data"]["batch_size"])
 
         return train_loader, val_loader, test_loader
@@ -83,7 +86,7 @@ class Experiment:
                               num_classes=self.config["model"]["num_classes"],
                               negative_slope=self.config["model"]["neg_slope"],
                               dropout=self.config["model"]["dropout"],
-                              seed=self.config["seed"])
+                              seed=self.config["experiment"]["seed"])
 
         trainer = Trainer(model=model,
                           optimizer=self.config["training"]["optimizer"](model),
@@ -158,9 +161,14 @@ class Experiment:
         return likelihoods_g0_h0, likelihoods_g0_h1, likelihoods_g1_h0, likelihoods_g1_h1
 
     def run(self):
+        logger.info("===== Running Experiment =====")
+        logger.info("Preprocessing data")
         train_loader, val_loader, test_loader = self.preprocess_data()
+        logger.info("Training model")
         model = self.train_model(train_loader, val_loader)
+        logger.info("Constructing histograms")
         histograms_g0, histograms_g1 = self.get_hist_by_sens_group(model, train_loader)
+        logger.info("Computing likelihood")
         likelihoods_groups = self.get_likelihood_by_sens_group(model, test_loader, histograms_g0, histograms_g1)
 
         likelihoods_g0_h0, likelihoods_g0_h1, likelihoods_g1_h0, likelihoods_g1_h1 = likelihoods_groups

@@ -13,21 +13,24 @@ logger = LoggerFactory.get_logger(name=__name__)
 
 
 class Preprocessing(ABC):
-    def __init__(self, df: pd.DataFrame, operations: list[PreprocessingOperation], target_column: str):
+    def __init__(self, df: pd.DataFrame, operations: list[PreprocessingOperation],
+                 target_column: str,
+                 sens_attr_column: str):
         self.df = df
         if not operations:
             logger.warning(f'Defined a empty preprocessing pipeline')
         self.operations = operations
         self.target_column = target_column
+        self.sens_attr_column = sens_attr_column
 
     def run(self):
         if not self.operations:
             raise ValueError("Preprocessing operations are not defined yet")
         for op in self.operations:
-            op.run(self.df)
+            self.df = op.run(self.df)
 
     def generate_dataset(self) -> IndexDataset:
-        dataset = IndexDataset(self.df, target_column=self.target_column)
+        dataset = IndexDataset(self.df, target_column=self.target_column, sens_attr_column=self.sens_attr_column)
         return dataset
 
     def generate_loaders(self,
@@ -52,21 +55,21 @@ class Preprocessing(ABC):
 
 
 class AdultPreprocessing(Preprocessing):
-    def __init__(self):
+    def __init__(self, sens_attr_column: str):
         operations = [MakeCategorical(lb=3, ub=5), Scale(), ToFloat()]
         df = pd.read_csv(ADULT_DATA_PATH, index_col='inputId')
-        super().__init__(df, operations, ADULT_TARGET)
+        super().__init__(df, operations, ADULT_TARGET, sens_attr_column)
 
 
 class GermanCreditPreprocessing(Preprocessing):
-    def __init__(self):
+    def __init__(self, sens_attr_column: str):
         operations = [MakeCategorical(lb=3, ub=5), Scale(), ToFloat()]
         df = pd.read_csv(GERMAN_DATA_PATH, index_col='inputId')
-        super().__init__(df, operations, GERMAN_TARGET)
+        super().__init__(df, operations, GERMAN_TARGET, sens_attr_column)
 
 
 class LawSchoolPreprocessing(Preprocessing):
-    def __init__(self):
+    def __init__(self, sens_attr_column: str):
         operations = [MakeCategorical(lb=3, ub=5), Scale(), ToFloat()]
         df = pd.read_csv(LAW_DATA_PATH, index_col='inputId')
-        super().__init__(df, operations, LAW_TARGET)
+        super().__init__(df, operations, LAW_TARGET, sens_attr_column)

@@ -14,7 +14,7 @@ class PreprocessingOperation(ABC):
         pass
 
     @abstractmethod
-    def run(self, df: pd.DataFrame):
+    def run(self, df: pd.DataFrame) -> pd.DataFrame:
         pass
 
 
@@ -24,7 +24,7 @@ class MakeCategorical(PreprocessingOperation):
         self.lb = lb
         self.ub = ub
 
-    def run(self, df: pd.DataFrame):
+    def run(self, df: pd.DataFrame) -> pd.DataFrame:
         # We select all columns that are not number or bool dtype
         categorical_columns = df.select_dtypes(exclude=['number', 'bool']).columns.tolist()
 
@@ -34,65 +34,67 @@ class MakeCategorical(PreprocessingOperation):
                 categorical_columns.append(c)
 
         logger.info(f"Categorical columns are : {categorical_columns}")
-        pd.get_dummies(df, columns=categorical_columns, prefix_sep='=', inplace=True)
+        return pd.get_dummies(df, columns=categorical_columns, prefix_sep='=')
 
 
 class Scale(PreprocessingOperation):
     """Scale all numerical column between 0 and 1"""
 
-    def run(self, df: pd.DataFrame):
+    def run(self, df: pd.DataFrame) -> pd.DataFrame:
+        new_df = pd.DataFrame({})
         scaler = MinMaxScaler()
         numeric_columns = [c for c in df.columns if (is_numeric_dtype(df[c]))]
         if numeric_columns:
-            df[numeric_columns] = scaler.fit_transform(df[numeric_columns])
+            new_df[numeric_columns] = scaler.fit_transform(df[numeric_columns])
         else:
             logger.warning(f'SCALE_DATA : scale_data - Scaler not applied')
+
+        return new_df
 
 
 class ToFloat(PreprocessingOperation):
     """Convert all values of dataset to float type"""
 
-    def run(self, df: pd.DataFrame):
-        for col in df.columns:
-            df[col] = df[col].astype(float)
+    def run(self, df: pd.DataFrame) -> pd.DataFrame:
+        return df.astype(float)
 
 
-class CorrelationRemoverPrepro(PreprocessingOperation):
-    def run(self, df: pd.DataFrame):
-        from fairlearn.preprocessing import CorrelationRemover
-
-        target_col = df[self.target]
-        index_col = df.index
-
-        cr = CorrelationRemover(sensitive_feature_ids=[protec_attr])
-        X_cr = cr.fit_transform(X=df, y=target_col)
-        cr_col = list(df.columns)
-        cr_col.remove(protec_attr)
-        X_cr = pd.DataFrame(X_cr, columns=cr_col)
-        X_cr.index = index_col
-        X_cr[protec_attr] = df[protec_attr]
-        X_cr[self.target] = target_col
-
-        # column order
-        X_cr = X_cr[list(df.columns)]
-        df = X_cr
-
-
-class DisparateImpactRemoverPrepro(PreprocessingOperation):
-    def run(self, df: pd.DataFrame):
-        from aif360.datasets import StandardDataset
-        from aif360.algorithms.preprocessing import DisparateImpactRemover
-
-        standard_data = StandardDataset(df=df,
-                                        label_name=self.target,
-                                        protected_attribute_names=[protec_attr],
-                                        favorable_classes=favorable_classes,
-                                        # Label that is considered as positive
-                                        privileged_classes=privileged_classes)  # protected attr that are considered privileged
-
-        dir_ = DisparateImpactRemover(sensitive_attribute=protec_attr)
-        data_dir = dir_.fit_transform(standard_data)
-        data_dir, _ = data_dir.convert_to_dataframe()
-        data_dir = data_dir[list(df.columns)]
-        df = data_dir
-        df.index = df.index.astype(int)
+# class CorrelationRemoverPrepro(PreprocessingOperation):
+#     def run(self, df: pd.DataFrame) -> pd.DataFrame:
+#         from fairlearn.preprocessing import CorrelationRemover
+#
+#         target_col = df[self.target]
+#         index_col = df.index
+#
+#         cr = CorrelationRemover(sensitive_feature_ids=[protec_attr])
+#         X_cr = cr.fit_transform(X=df, y=target_col)
+#         cr_col = list(df.columns)
+#         cr_col.remove(protec_attr)
+#         X_cr = pd.DataFrame(X_cr, columns=cr_col)
+#         X_cr.index = index_col
+#         X_cr[protec_attr] = df[protec_attr]
+#         X_cr[self.target] = target_col
+#
+#         # column order
+#         X_cr = X_cr[list(df.columns)]
+#         df = X_cr
+#
+#
+# class DisparateImpactRemoverPrepro(PreprocessingOperation):
+#     def run(self, df: pd.DataFrame) -> pd.DataFrame:
+#         from aif360.datasets import StandardDataset
+#         from aif360.algorithms.preprocessing import DisparateImpactRemover
+#
+#         standard_data = StandardDataset(df=df,
+#                                         label_name=self.target,
+#                                         protected_attribute_names=[protec_attr],
+#                                         favorable_classes=favorable_classes,
+#                                         # Label that is considered as positive
+#                                         privileged_classes=privileged_classes)  # protected attr that are considered privileged
+#
+#         dir_ = DisparateImpactRemover(sensitive_attribute=protec_attr)
+#         data_dir = dir_.fit_transform(standard_data)
+#         data_dir, _ = data_dir.convert_to_dataframe()
+#         data_dir = data_dir[list(df.columns)]
+#         df = data_dir
+#         df.index = df.index.astype(int)
