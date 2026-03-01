@@ -96,7 +96,7 @@ class HistogramConstructor:
         return MultiBinsHistogram(node_id=self.node_id, bins=bins, freq=hist)
 
     def get_hist(self, data_loader: DataLoader) -> Histogram:
-        act_getter = self.extractor.extract(data_loader)
+        act_getter = self.extractor.extract(data_loader, filter_correct=True)
         activations = act_getter.get_by_node(self.node_id)
 
         sigma_act = pstdev(activations)

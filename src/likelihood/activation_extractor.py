@@ -36,22 +36,32 @@ class ActivationExtractor:
     def __init__(self, classificator: Classificator):
         self.classificator = classificator
 
-    def extract(self, dataloader: DataLoader):
+    def extract(self, dataloader: DataLoader, filter_correct: bool = True):
         self.classificator.eval()
 
-        activations = []
-        indexes = []
+        all_activations = []
+        all_indexes = []
+        all_correct_mask = []
 
         with torch.no_grad():
             for batch in dataloader:
                 index, inputs, targets = batch
 
-                _, hidden = self.classificator(inputs)
+                outputs, hidden = self.classificator(inputs)
+                predictions = torch.argmax(outputs, dim=1)
+                true_labels = targets.long()
 
-                activations.append(hidden)
-                indexes.append(index)
+                is_correct = (predictions == true_labels)
+                all_correct_mask.append(is_correct)
+                all_activations.append(hidden)
+                all_indexes.append(index)
 
-        index_tensor = torch.cat(indexes, dim=0)
-        activation_tensor = torch.cat(activations, dim=0)
+        index_tensor = torch.cat(all_indexes, dim=0)
+        activation_tensor = torch.cat(all_activations, dim=0)
+        correct_mask = torch.cat(all_correct_mask, dim=0)
+
+        if filter_correct:
+            index_tensor = index_tensor[correct_mask]
+            activation_tensor = activation_tensor[correct_mask]
 
         return ActivationGetter(activations=activation_tensor, indexes=index_tensor)
