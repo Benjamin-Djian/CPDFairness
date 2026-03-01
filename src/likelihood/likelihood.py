@@ -33,8 +33,8 @@ class LikelihoodCalculator:
             for hist in histograms:
                 node_activation = activation[:, hist.node_id]
                 try:
-                    node_activation = float(float)
-                except TypeError:
+                    node_activation = float(node_activation.item())
+                except RuntimeError:
                     raise ValueError(f"Impossible to parse activation level {node_activation} to float")
 
                 hist_prob = hist.compute_hist_prob(activation)
