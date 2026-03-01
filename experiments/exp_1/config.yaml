@@ -1,0 +1,24 @@
+experiment:
+  seed: 42
+
+data:
+  name: adult
+  sens_attr: sex
+  prop_train: 0.8
+  prop_valid: 0.1
+  batch_size: 64
+
+model:
+  input_dim: 103
+  hidden_dims:
+    - 128
+    - 64
+  num_classes: 2
+  neg_slope: 0.1
+  dropout: 0.5
+
+training:
+  optimizer: Adam
+  criterion: NLL
+  learning_rate: 0.001
+  epochs: 10
