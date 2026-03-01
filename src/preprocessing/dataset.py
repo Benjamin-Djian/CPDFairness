@@ -4,8 +4,11 @@ from torch.utils.data import Dataset
 
 
 class IndexDataset(Dataset):
-    def __init__(self, df: pd.DataFrame, target_column: str):
+    def __init__(self, df: pd.DataFrame, sens_attr_column: str, target_column: str):
         self.df = df
+        self.check_binary_feature(sens_attr_column)
+        self.check_binary_feature(target_column)
+        self.sens_attr_column = sens_attr_column
         self.target_column = target_column
 
         self.features = df.drop(columns=[target_column]).values
@@ -14,6 +17,12 @@ class IndexDataset(Dataset):
     @property
     def feature_columns(self):
         return list(self.df.drop(columns=[self.target_column]).columns)
+
+    def check_binary_feature(self, col_name: str):
+        if col_name not in self.df.columns:
+            raise ValueError(f"{col_name} must be in dataset")
+        if not self.df[col_name].isin([0, 1]).all():
+            raise ValueError(f"{col_name} feature must be binary and takes values in 0 or 1")
 
     def __len__(self) -> int:
         return len(self.df)
