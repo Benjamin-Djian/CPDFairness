@@ -2,8 +2,11 @@ import math
 import os
 from collections import OrderedDict
 from pathlib import Path
+from typing import Any
 
+import torch
 from dotenv import load_dotenv
+from torch import nn
 
 load_dotenv()
 
@@ -54,6 +57,23 @@ def getenv_str(key: str) -> str:
         raise KeyError(f"Required environment variable '{key}' not found.")
     return value
 
+
+# ----- CONFIG -----
+
+REQUIRED_CONFIG_KEYS = {
+    "experiment": ["seed"],
+    "data": ["name", "prop_train", "prop_valid", "batch_size", "sens_attr"],
+    "model": ["input_dim", "hidden_dims", "num_classes", "neg_slope", "dropout"],
+    "training": ["optimizer", "criterion", "epochs", "learning_rate"],
+}
+
+OPTIMIZER_REGISTRY: dict[str, Any] = {
+    "Adam": lambda params, lr: torch.optim.AdamW(params, lr=lr),
+}
+
+CRITERION_REGISTRY: dict[str, Any] = {
+    "NLL": nn.NLLLoss(),
+}
 
 # ----- CALCUL -----
 POS_UNDEF_INT = getenv_int("POS_UNDEF_INT")
