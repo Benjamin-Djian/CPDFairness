@@ -1,11 +1,80 @@
+from abc import ABC, abstractmethod
+
 import torch
 from torch.utils.data import DataLoader
 
 from src.model.classificator import Classificator
+from src.preprocessing.dataset import IndexDataset
+
+
+class ActivationFilter(ABC):
+    @abstractmethod
+    def get_mask(self,
+                 indexes: torch.Tensor,
+                 inputs: torch.Tensor,
+                 targets: torch.Tensor,
+                 predictions: torch.Tensor,
+                 activations: torch.Tensor) -> torch.Tensor:
+        pass
+
+
+class ClassificationFilter(ActivationFilter):
+    """Filter by correct/incorrect classification."""
+
+    def __init__(self, keep_correct: bool = True):
+        self.keep_correct = keep_correct
+
+    def get_mask(self,
+                 indexes: torch.Tensor,
+                 inputs: torch.Tensor,
+                 targets: torch.Tensor,
+                 predictions: torch.Tensor,
+                 activations: torch.Tensor) -> torch.Tensor:
+        is_correct = predictions == targets.long()
+        return is_correct if self.keep_correct else ~is_correct
+
+
+class FeatureFilter(ActivationFilter):
+    """Filter by feature column value."""
+
+    def __init__(self, column_name: str, value: int, dataset: IndexDataset):
+        self.column_name = column_name
+        self.value = value
+        self.dataset = dataset
+
+    def get_mask(self,
+                 indexes: torch.Tensor,
+                 inputs: torch.Tensor,
+                 targets: torch.Tensor,
+                 predictions: torch.Tensor,
+                 activations: torch.Tensor) -> torch.Tensor:
+
+        col_idx = self.dataset.get_index_col(self.column_name)
+        return inputs[:, col_idx] == self.value
+
+
+class FilterChain:
+    """Compose multiple filters."""
+
+    def __init__(self, filters: list[ActivationFilter]):
+        self.filters = filters
+
+    def apply(self,
+              indexes: torch.Tensor,
+              inputs: torch.Tensor,
+              targets: torch.Tensor,
+              predictions: torch.Tensor,
+              activations: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        mask = None
+        for f in self.filters:
+            f_mask = f.get_mask(indexes, inputs, targets, predictions, activations)
+            mask = f_mask if mask is None else mask & f_mask
+
+        return indexes[mask], activations[mask]
 
 
 class ActivationGetter:
-    """Class to query activation levels based on their node or on their inputs"""
+    """Class to query activation levels based on their node or on their inputs."""
 
     def __init__(self, indexes: torch.Tensor, activations: torch.Tensor):
         self.activations = activations
@@ -31,37 +100,53 @@ class ActivationGetter:
 
 
 class ActivationExtractor:
-    """Extract activation levels for all neurons, for all inputs"""
+    """Extract activation levels for all neurons, for all inputs."""
 
     def __init__(self, classificator: Classificator):
         self.classificator = classificator
 
-    def extract(self, dataloader: DataLoader, filter_correct: bool = True):
+    def extract(
+            self,
+            dataloader: DataLoader,
+            filters: list[ActivationFilter] | None = None) -> ActivationGetter:
+        """Extract activations with optional filters.
+
+        Args:
+            dataloader: DataLoader providing batches of (index, inputs, targets)
+            filters: List of filters to apply. If None, returns all activations.
+
+        Returns:
+            ActivationGetter with filtered activations and indexes.
+        """
         self.classificator.eval()
 
-        all_activations = []
         all_indexes = []
-        all_correct_mask = []
+        all_inputs = []
+        all_targets = []
+        all_predictions = []
+        all_activations = []
 
         with torch.no_grad():
-            for batch in dataloader:
-                index, inputs, targets = batch
-
+            for index, inputs, targets in dataloader:
                 outputs, hidden = self.classificator(inputs)
                 predictions = torch.argmax(outputs, dim=1)
-                true_labels = targets.long()
 
-                is_correct = (predictions == true_labels)
-                all_correct_mask.append(is_correct)
-                all_activations.append(hidden)
                 all_indexes.append(index)
+                all_inputs.append(inputs)
+                all_targets.append(targets)
+                all_predictions.append(predictions)
+                all_activations.append(hidden)
 
-        index_tensor = torch.cat(all_indexes, dim=0)
-        activation_tensor = torch.cat(all_activations, dim=0)
-        correct_mask = torch.cat(all_correct_mask, dim=0)
+        indexes = torch.cat(all_indexes)
+        inputs = torch.cat(all_inputs)
+        targets = torch.cat(all_targets)
+        predictions = torch.cat(all_predictions)
+        activations = torch.cat(all_activations)
 
-        if filter_correct:
-            index_tensor = index_tensor[correct_mask]
-            activation_tensor = activation_tensor[correct_mask]
+        if filters:
+            filter_chain = FilterChain(filters)
+            indexes, activations = filter_chain.apply(
+                indexes, inputs, targets, predictions, activations
+            )
 
-        return ActivationGetter(activations=activation_tensor, indexes=index_tensor)
+        return ActivationGetter(activations=activations, indexes=indexes)

@@ -3,7 +3,7 @@ from pathlib import Path
 import yaml
 from torch.utils.data import DataLoader
 
-from src.likelihood.activation_extractor import ActivationExtractor
+from src.likelihood.activation_extractor import ActivationExtractor, ClassificationFilter
 from src.likelihood.histograms import HistogramConstructor, Histogram
 from src.likelihood.likelihood import LikelihoodCalculator, LikelihoodScore
 from src.model.classificator import Classificator
@@ -58,12 +58,13 @@ class Experiment:
         return model
 
     @staticmethod
-    def get_histograms(model: Classificator, train_loader: DataLoader) -> list[Histogram]:
+    def get_histograms(model: Classificator,
+                       train_loader: DataLoader) -> list[Histogram]:
         extractor = ActivationExtractor(model)
         histograms = []
         for node_id in range(model.last_hidden_dim):
             hist_construct = HistogramConstructor(node_id, extractor)
-            hist = hist_construct.get_hist(train_loader)
+            hist = hist_construct.get_hist(train_loader, filters=[ClassificationFilter(keep_correct=True)])
             histograms.append(hist)
         return histograms
 

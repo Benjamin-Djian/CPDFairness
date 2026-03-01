@@ -2,7 +2,7 @@ import math
 
 from torch.utils.data import DataLoader
 
-from src.likelihood.activation_extractor import ActivationExtractor
+from src.likelihood.activation_extractor import ActivationExtractor, ActivationFilter
 from src.likelihood.histograms import Histogram
 from src.utils.logger import LoggerFactory
 
@@ -23,9 +23,11 @@ class LikelihoodCalculator:
     def __init__(self, extractor: ActivationExtractor):
         self.extractor = extractor
 
-    def get_likelihood(self, data_loader: DataLoader, histograms: list[Histogram]) -> list[LikelihoodScore]:
+    def get_likelihood(self, data_loader: DataLoader,
+                       histograms: list[Histogram],
+                       filters: list[ActivationFilter] | None = None) -> list[LikelihoodScore]:
         likelihoods = []
-        act_getter = self.extractor.extract(data_loader)
+        act_getter = self.extractor.extract(data_loader, filters=filters)
         for index, activation in act_getter.iterate_indexes():
             likelihood = 0.
             for hist in histograms:
