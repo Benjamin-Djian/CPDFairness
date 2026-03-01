@@ -13,7 +13,7 @@ logger = LoggerFactory.get_logger(name=__name__)
 
 
 class Preprocessing(ABC):
-    def __init__(self, df, operations: list[PreprocessingOperation], target_column: str):
+    def __init__(self, df: pd.DataFrame, operations: list[PreprocessingOperation], target_column: str):
         self.df = df
         if not operations:
             logger.warning(f'Defined a empty preprocessing pipeline')

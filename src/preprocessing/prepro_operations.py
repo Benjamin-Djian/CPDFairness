@@ -34,7 +34,7 @@ class MakeCategorical(PreprocessingOperation):
                 categorical_columns.append(c)
 
         logger.info(f"Categorical columns are : {categorical_columns}")
-        df = pd.get_dummies(df, columns=categorical_columns, prefix_sep='=')
+        pd.get_dummies(df, columns=categorical_columns, prefix_sep='=', inplace=True)
 
 
 class Scale(PreprocessingOperation):
@@ -50,10 +50,11 @@ class Scale(PreprocessingOperation):
 
 
 class ToFloat(PreprocessingOperation):
-    """Convert all values of dataset to flaot type"""
+    """Convert all values of dataset to float type"""
 
     def run(self, df: pd.DataFrame):
-        df = df.astype(float)
+        for col in df.columns:
+            df[col] = df[col].astype(float)
 
 
 class CorrelationRemoverPrepro(PreprocessingOperation):
