@@ -20,7 +20,7 @@ class IndexDataset(Dataset):
 
     def check_binary_feature(self, col_name: str):
         if col_name not in self.df.columns:
-            raise ValueError(f"{col_name} must be in dataset")
+            raise ValueError(f"{col_name} column must be in dataset columns")
         if not self.df[col_name].isin([0, 1]).all():
             raise ValueError(f"{col_name} feature must be binary and takes values in 0 or 1")
 

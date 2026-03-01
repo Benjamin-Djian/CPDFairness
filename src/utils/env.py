@@ -90,9 +90,9 @@ GERMAN_DATA_PATH = Path(getenv_str("GERMAN_DATA_PATH"))
 LAW_DATA_PATH = Path(getenv_str("LAW_DATA_PATH"))
 
 # ----- DATA -----
-ADULT_TARGET = Path(getenv_str("ADULT_TARGET"))
-GERMAN_TARGET = Path(getenv_str("GERMAN_TARGET"))
-LAW_TARGET = Path(getenv_str("LAW_TARGET"))
+ADULT_TARGET = getenv_str("ADULT_TARGET")
+GERMAN_TARGET = getenv_str("GERMAN_TARGET")
+LAW_TARGET = getenv_str("LAW_TARGET")
 
 # ----- LOGGING -----
 LOG_LEVEL = getenv_str("LOG_LEVEL")

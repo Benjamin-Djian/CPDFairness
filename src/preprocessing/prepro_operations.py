@@ -41,15 +41,15 @@ class Scale(PreprocessingOperation):
     """Scale all numerical column between 0 and 1"""
 
     def run(self, df: pd.DataFrame) -> pd.DataFrame:
-        new_df = pd.DataFrame({})
         scaler = MinMaxScaler()
         numeric_columns = [c for c in df.columns if (is_numeric_dtype(df[c]))]
         if numeric_columns:
+            new_df = df.copy()
             new_df[numeric_columns] = scaler.fit_transform(df[numeric_columns])
+            return new_df
         else:
             logger.warning(f'SCALE_DATA : scale_data - Scaler not applied')
-
-        return new_df
+            return df
 
 
 class ToFloat(PreprocessingOperation):
@@ -57,7 +57,6 @@ class ToFloat(PreprocessingOperation):
 
     def run(self, df: pd.DataFrame) -> pd.DataFrame:
         return df.astype(float)
-
 
 # class CorrelationRemoverPrepro(PreprocessingOperation):
 #     def run(self, df: pd.DataFrame) -> pd.DataFrame:

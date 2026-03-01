@@ -18,6 +18,15 @@ class LikelihoodScore:
         self.input_id = input_id
         self.score = score
 
+    def __repr__(self):
+        return f"{self.input_id} {self.score}"
+
+    def __gt__(self, other):
+        return self.score > other.score
+
+    def __lt__(self, other):
+        return self.score < other.score
+
 
 class LikelihoodCalculator:
     def __init__(self, extractor: ActivationExtractor):
@@ -32,7 +41,7 @@ class LikelihoodCalculator:
         for index, activation in act_getter.iterate_indexes():
             likelihood = 0.
             for hist in histograms:
-                node_activation = activation[:, hist.node_id]
+                node_activation = activation[hist.node_id]
                 try:
                     node_activation = float(node_activation.item())
                 except RuntimeError:

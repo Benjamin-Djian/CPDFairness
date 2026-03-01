@@ -3,6 +3,9 @@ from torch import nn, optim
 from torch.utils.data import DataLoader
 
 from src.model.classificator import Classificator
+from src.utils.logger import LoggerFactory
+
+logger = LoggerFactory.get_logger(name=__name__)
 
 
 class TrainHistory:
@@ -27,7 +30,7 @@ class Trainer:
             for batch in loader:
                 _, inputs, labels = batch
                 logits = self.model(inputs)[0]
-                loss = self.criterion(logits, labels)
+                loss = self.criterion(logits, labels.long())
 
                 running_loss += loss.item()
                 running_acc += torch.eq(logits.argmax(1), labels.long()).sum().item()
@@ -66,6 +69,7 @@ class Trainer:
         val_loss_list = []
         val_acc_list = []
         for epoch in range(epochs):
+            logger.info(f"Epochs {epoch}/{epochs}")
             train_loss, train_acc = self.train_epoch(train_loader)
             val_loss, val_acc = self.evaluate(val_loader)
 

@@ -48,6 +48,10 @@ class MultiBinsHistogram(Histogram):
             cur_bin_id = int(round(cur_bin_id, e.EPSILON_PREC))
             if cur_bin_id < 0:
                 raise ValueError(f'ERROR compute_hist_prob : cur_bin_id {cur_bin_id} is undefined')
+            if len(self.freq) <= cur_bin_id:
+                return e.LOW_SMOOTHED_PROB
+            if self.freq[cur_bin_id] == 0:
+                return e.LOW_SMOOTHED_PROB
 
             return self.freq[cur_bin_id] / np.sum(self.freq)
 
@@ -102,7 +106,7 @@ class HistogramConstructor:
         act_getter = self.extractor.extract(data_loader, filters=filters)
         activations = act_getter.get_by_node(self.node_id)
 
-        sigma_act = pstdev(activations)
+        sigma_act = pstdev(activations.numpy())
         sigma_act = round(sigma_act, e.EPSILON_PREC) if sigma_act >= e.EPSILON else 0.0
 
         self.check_null_std(sigma_act)

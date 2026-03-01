@@ -164,13 +164,15 @@ class Experiment:
         logger.info("===== Running Experiment =====")
         logger.info("Preprocessing data")
         train_loader, val_loader, test_loader = self.preprocess_data()
+
         logger.info("Training model")
         model = self.train_model(train_loader, val_loader)
+
         logger.info("Constructing histograms")
         histograms_g0, histograms_g1 = self.get_hist_by_sens_group(model, train_loader)
+
         logger.info("Computing likelihood")
         likelihoods_groups = self.get_likelihood_by_sens_group(model, test_loader, histograms_g0, histograms_g1)
-
         likelihoods_g0_h0, likelihoods_g0_h1, likelihoods_g1_h0, likelihoods_g1_h1 = likelihoods_groups
 
         return likelihoods_g0_h0, likelihoods_g0_h1, likelihoods_g1_h0, likelihoods_g1_h1

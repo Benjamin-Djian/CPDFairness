@@ -8,6 +8,8 @@ from src.preprocessing.dataset import IndexDataset
 
 
 class ActivationFilter(ABC):
+    """Class to filter activation levels based on corresponding inputs characteristics"""
+
     @abstractmethod
     def get_mask(self,
                  indexes: torch.Tensor,
@@ -48,7 +50,6 @@ class FeatureFilter(ActivationFilter):
                  targets: torch.Tensor,
                  predictions: torch.Tensor,
                  activations: torch.Tensor) -> torch.Tensor:
-
         col_idx = self.dataset.get_index_col(self.column_name)
         return inputs[:, col_idx] == self.value
 
@@ -87,7 +88,8 @@ class ActivationGetter:
 
     def iterate_indexes(self):
         for index in self.indexes:
-            yield index, self.get_by_index(index)
+            int_index = int(index.item())
+            yield index, self.get_by_index(int_index)
 
     def get_by_node(self, node_id: int) -> torch.Tensor:
         return self.activations[:, node_id]
@@ -109,15 +111,6 @@ class ActivationExtractor:
             self,
             dataloader: DataLoader,
             filters: list[ActivationFilter] | None = None) -> ActivationGetter:
-        """Extract activations with optional filters.
-
-        Args:
-            dataloader: DataLoader providing batches of (index, inputs, targets)
-            filters: List of filters to apply. If None, returns all activations.
-
-        Returns:
-            ActivationGetter with filtered activations and indexes.
-        """
         self.classificator.eval()
 
         all_indexes = []

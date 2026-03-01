@@ -44,9 +44,12 @@ class Preprocessing(ABC):
         len_test = len(self.df) - len_train - len_valid
         gen = torch.Generator().manual_seed(seed)
 
-        train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset,
-                                                                                 [len_train, len_valid, len_test],
-                                                                                 generator=gen)
+        train_subset, val_subset, test_subset = torch.utils.data.random_split(dataset, [len_train, len_valid, len_test],
+                                                                              generator=gen)
+
+        train_dataset = train_subset.dataset
+        val_dataset = val_subset.dataset
+        test_dataset = test_subset.dataset
 
         train_loader = DataLoader(train_dataset, batch_size=batch_size)
         val_loader = DataLoader(val_dataset, batch_size=batch_size)
