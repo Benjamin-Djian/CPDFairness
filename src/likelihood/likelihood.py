@@ -14,7 +14,7 @@ prob_table_type = dict[nk_type, dict[int, float]]
 
 
 class LikelihoodScore:
-    def __init__(self, input_id: int, score=float):
+    def __init__(self, input_id: int, score: float):
         self.input_id = input_id
         self.score = score
 
@@ -23,9 +23,10 @@ class LikelihoodCalculator:
     def __init__(self, extractor: ActivationExtractor):
         self.extractor = extractor
 
-    def get_likelihood(self, data_loader: DataLoader,
-                       histograms: list[Histogram],
-                       filters: list[ActivationFilter] | None = None) -> list[LikelihoodScore]:
+    def compute_likelihood(self,
+                           data_loader: DataLoader,
+                           histograms: list[Histogram],
+                           filters: list[ActivationFilter] | None = None) -> list[LikelihoodScore]:
         likelihoods = []
         act_getter = self.extractor.extract(data_loader, filters=filters)
         for index, activation in act_getter.iterate_indexes():
@@ -37,7 +38,7 @@ class LikelihoodCalculator:
                 except RuntimeError:
                     raise ValueError(f"Impossible to parse activation level {node_activation} to float")
 
-                hist_prob = hist.compute_hist_prob(activation)
+                hist_prob = hist.compute_hist_prob(node_activation)
                 likelihood = likelihood - math.log(hist_prob)
 
             likelihoods.append(LikelihoodScore(input_id=index, score=likelihood))

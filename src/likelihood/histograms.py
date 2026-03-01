@@ -6,12 +6,7 @@ import torch
 from torch.utils.data import DataLoader
 
 import src.utils.env as e
-from src.likelihood.activation_extractor import (
-    ActivationExtractor,
-    ActivationFilter,
-    ClassificationFilter,
-    FeatureFilter,
-)
+from src.likelihood.activation_extractor import ActivationExtractor, ActivationFilter
 from src.utils.logger import LoggerFactory
 
 logger = LoggerFactory.get_logger(name=__name__)
@@ -100,10 +95,9 @@ class HistogramConstructor:
 
         return MultiBinsHistogram(node_id=self.node_id, bins=bins, freq=hist)
 
-    def get_hist(
-            self,
-            data_loader: DataLoader,
-            filters: list[ActivationFilter] | None = None) -> Histogram:
+    def compute_hist(self,
+                     data_loader: DataLoader,
+                     filters: list[ActivationFilter] | None = None) -> Histogram:
 
         act_getter = self.extractor.extract(data_loader, filters=filters)
         activations = act_getter.get_by_node(self.node_id)
