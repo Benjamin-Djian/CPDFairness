@@ -64,12 +64,11 @@ class HistWriter(FileWriter):
             to_write = []
             prev_bin = hist.bins[0]
             for i, current_bin in enumerate(hist.bins[1:]):
-                if hist.freq[i] != 0:
-                    to_write.append([str(hist.node_id),
-                                     str(i),
-                                     f'{prev_bin:.{e.EPSILON_PREC}f}',
-                                     f'{current_bin:.{e.EPSILON_PREC}f}',
-                                     str(hist.freq[i])])
+                to_write.append([str(hist.node_id),
+                                 str(i),
+                                 f'{prev_bin:.{e.EPSILON_PREC}f}',
+                                 f'{current_bin:.{e.EPSILON_PREC}f}',
+                                 str(hist.freq[i])])
 
                 prev_bin = current_bin
 
