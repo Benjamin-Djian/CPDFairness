@@ -21,12 +21,6 @@ class LikelihoodScore:
     def __repr__(self):
         return f"{self.input_id} {self.score}"
 
-    def __gt__(self, other):
-        return self.score > other.score
-
-    def __lt__(self, other):
-        return self.score < other.score
-
 
 class LikelihoodCalculator:
     def __init__(self, extractor: ActivationExtractor):
