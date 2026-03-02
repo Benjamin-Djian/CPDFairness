@@ -1,11 +1,12 @@
 from abc import ABC
 
 import pandas as pd
+import torch
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 
 from src.preprocessing.dataset import IndexDataset
-from src.preprocessing.prepro_operations import PreprocessingOperation, MakeCategorical, Scale, ToFloat
+from src.preprocessing.prepro_operations import PreprocessingOperation, MakeCategorical, Scale, ToFloat, TargetAtTheEnd
 from src.utils.env import ADULT_DATA_PATH, LAW_DATA_PATH, GERMAN_DATA_PATH, ADULT_TARGET, GERMAN_TARGET, LAW_TARGET
 from src.utils.logger import LoggerFactory
 
@@ -27,7 +28,9 @@ class Preprocessing(ABC):
         if not self.operations:
             raise ValueError("Preprocessing operations are not defined yet")
         for op in self.operations:
-            self.df = op.run(self.df)
+            self.df = op.run(self.df,
+                             target_name=self.target_column,
+                             sens_attr_name=self.sens_attr_column)
 
     def generate_dataset(self, new_df: pd.DataFrame) -> IndexDataset:
         dataset = IndexDataset(new_df, target_column=self.target_column, sens_attr_column=self.sens_attr_column)
@@ -45,29 +48,30 @@ class Preprocessing(ABC):
         val_dataset = self.generate_dataset(val_df)
         test_dataset = self.generate_dataset(test_df)
 
-        train_loader = DataLoader(train_dataset, batch_size=batch_size)
-        val_loader = DataLoader(val_dataset, batch_size=batch_size)
-        test_loader = DataLoader(test_dataset, batch_size=batch_size)
+        torch.manual_seed(seed)
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+        val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
+        test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
         return train_loader, val_loader, test_loader
 
 
 class AdultPreprocessing(Preprocessing):
     def __init__(self, sens_attr_column: str):
-        operations = [MakeCategorical(lb=3, ub=5), Scale(), ToFloat()]
+        operations = [MakeCategorical(lb=3, ub=5), Scale(), ToFloat(), TargetAtTheEnd()]
         df = pd.read_csv(ADULT_DATA_PATH, index_col='inputId')
         super().__init__(df, operations, ADULT_TARGET, sens_attr_column)
 
 
 class GermanCreditPreprocessing(Preprocessing):
     def __init__(self, sens_attr_column: str):
-        operations = [MakeCategorical(lb=3, ub=5), Scale(), ToFloat()]
+        operations = [MakeCategorical(lb=3, ub=5), Scale(), ToFloat(), TargetAtTheEnd()]
         df = pd.read_csv(GERMAN_DATA_PATH, index_col='inputId')
         super().__init__(df, operations, GERMAN_TARGET, sens_attr_column)
 
 
 class LawSchoolPreprocessing(Preprocessing):
     def __init__(self, sens_attr_column: str):
-        operations = [MakeCategorical(lb=3, ub=5), Scale(), ToFloat()]
+        operations = [MakeCategorical(lb=3, ub=5), Scale(), ToFloat(), TargetAtTheEnd()]
         df = pd.read_csv(LAW_DATA_PATH, index_col='inputId')
         super().__init__(df, operations, LAW_TARGET, sens_attr_column)
