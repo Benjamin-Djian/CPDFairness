@@ -89,7 +89,7 @@ class ActivationGetter:
     def iterate_indexes(self):
         for index in self.indexes:
             int_index = int(index.item())
-            yield index, self.get_by_index(int_index)
+            yield int(index), self.get_by_index(int_index)
 
     def get_by_node(self, node_id: int) -> torch.Tensor:
         return self.activations[:, node_id]
