@@ -1,7 +1,7 @@
 from abc import ABC
 
 import pandas as pd
-import torch
+from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 
 from src.preprocessing.dataset import IndexDataset
@@ -29,8 +29,8 @@ class Preprocessing(ABC):
         for op in self.operations:
             self.df = op.run(self.df)
 
-    def generate_dataset(self) -> IndexDataset:
-        dataset = IndexDataset(self.df, target_column=self.target_column, sens_attr_column=self.sens_attr_column)
+    def generate_dataset(self, new_df: pd.DataFrame) -> IndexDataset:
+        dataset = IndexDataset(new_df, target_column=self.target_column, sens_attr_column=self.sens_attr_column)
         return dataset
 
     def generate_loaders(self,
@@ -38,22 +38,17 @@ class Preprocessing(ABC):
                          prop_valid: float,
                          batch_size: int, seed) -> tuple[DataLoader, DataLoader, DataLoader]:
 
-        dataset = self.generate_dataset()
-        len_train = int(prop_train * len(dataset))
-        len_valid = int(prop_valid * len(dataset))
-        len_test = len(self.df) - len_train - len_valid
-        gen = torch.Generator().manual_seed(seed)
+        train_df, val_test_df = train_test_split(self.df, train_size=prop_train, random_state=seed, shuffle=True)
+        val_df, test_df = train_test_split(val_test_df, train_size=prop_valid, random_state=seed, shuffle=True)
 
-        train_subset, val_subset, test_subset = torch.utils.data.random_split(dataset, [len_train, len_valid, len_test],
-                                                                              generator=gen)
-
-        train_dataset = train_subset.dataset
-        val_dataset = val_subset.dataset
-        test_dataset = test_subset.dataset
+        train_dataset = self.generate_dataset(train_df)
+        val_dataset = self.generate_dataset(val_df)
+        test_dataset = self.generate_dataset(test_df)
 
         train_loader = DataLoader(train_dataset, batch_size=batch_size)
         val_loader = DataLoader(val_dataset, batch_size=batch_size)
         test_loader = DataLoader(test_dataset, batch_size=batch_size)
+
         return train_loader, val_loader, test_loader
 
 
