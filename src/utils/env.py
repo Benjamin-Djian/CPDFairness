@@ -2,11 +2,8 @@ import math
 import os
 from collections import OrderedDict
 from pathlib import Path
-from typing import Any
 
-import torch
 from dotenv import load_dotenv
-from torch import nn
 
 load_dotenv()
 
@@ -64,15 +61,7 @@ REQUIRED_CONFIG_KEYS = {
     "experiment": ["seed"],
     "data": ["name", "prop_train", "prop_valid", "batch_size", "sens_attr"],
     "model": ["input_dim", "hidden_dims", "num_classes", "neg_slope", "dropout"],
-    "training": ["optimizer", "criterion", "epochs", "learning_rate"],
-}
-
-OPTIMIZER_REGISTRY: dict[str, Any] = {
-    "Adam": lambda params, lr: torch.optim.AdamW(params, lr=lr),
-}
-
-CRITERION_REGISTRY: dict[str, Any] = {
-    "NLL": nn.NLLLoss(),
+    "training": ["epochs", "learning_rate"],
 }
 
 # ----- CALCUL -----
@@ -125,4 +114,8 @@ SET_NAME_POS = getenv_int("SET_NAME_POS")
 # Likelihood
 LH_HEADER = get_csv_column_types("LH_HEADER")
 LH_INPUT_ID_POS = getenv_int("LH_INPUT_ID_POS")
-SCORE_POS = getenv_int("SCORE_POS")
+LH_SCORE_POS = getenv_int("SCORE_POS")
+
+# ----- Visualisation -----
+DEFAULT_FIGURE_SIZE = (10, 6)
+DEFAULT_DPI = 100

@@ -12,7 +12,8 @@ from src.model.classificator import Classificator
 from src.model.trainer import Trainer
 from src.preprocessing.preprocessing import AdultPreprocessing, GermanCreditPreprocessing, LawSchoolPreprocessing, \
     Preprocessing
-from src.utils.env import REQUIRED_CONFIG_KEYS, OPTIMIZER_REGISTRY, CRITERION_REGISTRY
+from src.utils.env import REQUIRED_CONFIG_KEYS
+from src.utils.file_writer import LikelihoodWriter
 from src.utils.logger import LoggerFactory
 
 logger = LoggerFactory.get_logger(name=__name__)
@@ -22,7 +23,6 @@ class Experiment:
     def __init__(self, config_path: Path):
         self.config = self.load_config(config_path)
         self.validate_config()
-        self.parse_config()
 
     @staticmethod
     def load_config(config_file: Path) -> dict[str, Any]:
@@ -37,26 +37,6 @@ class Experiment:
             for key in keys:
                 if key not in self.config[section]:
                     raise ValueError(f"Missing required key: '{section}.{key}'")
-
-    def parse_config(self) -> None:
-        training = self.config["training"]
-        lr = training.get("learning_rate")
-
-        opt_name = training.get("optimizer")
-        if opt_name not in OPTIMIZER_REGISTRY:
-            raise ValueError(
-                f"Unknown optimizer: '{opt_name}'. Available: {list(OPTIMIZER_REGISTRY.keys())}"
-            )
-        training["optimizer"] = lambda model: OPTIMIZER_REGISTRY[opt_name](
-            model.parameters(), lr
-        )
-
-        crit_name = training.get("criterion")
-        if crit_name not in CRITERION_REGISTRY:
-            raise ValueError(
-                f"Unknown criterion: '{crit_name}'. Available: {list(CRITERION_REGISTRY.keys())}"
-            )
-        training["criterion"] = CRITERION_REGISTRY[crit_name]
 
     def get_prepro(self) -> Preprocessing:
         if self.config["data"]["name"] == "adult":
@@ -88,11 +68,11 @@ class Experiment:
                               dropout=self.config["model"]["dropout"],
                               seed=self.config["experiment"]["seed"])
 
-        trainer = Trainer(model=model,
-                          optimizer=self.config["training"]["optimizer"](model),
-                          criterion=self.config["training"]["criterion"])
+        trainer = Trainer(model=model, learning_rate=self.config["training"]["learning_rate"])
 
-        trainer.fit(train_loader, val_loader, epochs=self.config["training"]["epochs"])
+        history = trainer.fit(train_loader, val_loader, epochs=self.config["training"]["epochs"])
+        logger.info(f"Model trained with val_accuracy of {history.val_acc[-1]*100:.3f}%")
+        logger.debug(history)
         return model
 
     @staticmethod
@@ -160,7 +140,19 @@ class Experiment:
 
         return likelihoods_g0_h0, likelihoods_g0_h1, likelihoods_g1_h0, likelihoods_g1_h1
 
-    def run(self):
+    @staticmethod
+    def save_likelihoods(save_dir: Path,
+                         likelihoods_g0_h0: list[LikelihoodScore],
+                         likelihoods_g0_h1: list[LikelihoodScore],
+                         likelihoods_g1_h0: list[LikelihoodScore],
+                         likelihoods_g1_h1: list[LikelihoodScore]):
+        writer = LikelihoodWriter()
+        writer.write(path=save_dir / "likelihoods_g0_h0.csv", content=likelihoods_g0_h0)
+        writer.write(path=save_dir / "likelihoods_g0_h1.csv", content=likelihoods_g0_h1)
+        writer.write(path=save_dir / "likelihoods_g1_h0.csv", content=likelihoods_g1_h0)
+        writer.write(path=save_dir / "likelihoods_g1_h1.csv", content=likelihoods_g1_h1)
+
+    def run(self, save_path: Path):
         logger.info("===== Running Experiment =====")
         logger.info("Preprocessing data")
         train_loader, val_loader, test_loader = self.preprocess_data()
@@ -174,5 +166,4 @@ class Experiment:
         logger.info("Computing likelihood")
         likelihoods_groups = self.get_likelihood_by_sens_group(model, test_loader, histograms_g0, histograms_g1)
         likelihoods_g0_h0, likelihoods_g0_h1, likelihoods_g1_h0, likelihoods_g1_h1 = likelihoods_groups
-
-        return likelihoods_g0_h0, likelihoods_g0_h1, likelihoods_g1_h0, likelihoods_g1_h1
+        self.save_likelihoods(save_path, likelihoods_g0_h0, likelihoods_g0_h1, likelihoods_g1_h0, likelihoods_g1_h1)
