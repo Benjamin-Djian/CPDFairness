@@ -31,7 +31,7 @@ class Classificator(nn.Module):
 
         self.last_hidden_dim = hidden_dims[-1]
         self.seq = nn.Sequential(*layers)
-        self.output = nn.Linear(prev_dim, num_classes)
+        self.output = nn.Sequential(nn.Linear(prev_dim, num_classes), nn.LogSoftmax(dim=1))
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         hidden_data = self.seq(x)
