@@ -26,17 +26,15 @@ class MakeCategorical(PreprocessingOperation):
         self.ub = ub
 
     def run(self, df: pd.DataFrame, target_name: str, sens_attr_name: str) -> pd.DataFrame:
-        # We select all columns that are not number or bool dtype
         categorical_columns = df.select_dtypes(exclude=['number', 'bool']).columns.tolist()
         categorical_columns = [c for c in categorical_columns if c not in [target_name, sens_attr_name]]
 
-        # Categorical columns are also numerical columns with 3 to numeric_as_categorical_max_thr different values
         for c in df.select_dtypes(include=['number']).columns:
             if self.lb <= df[c].value_counts().shape[0] <= self.ub:
                 categorical_columns.append(c)
 
         logger.info(f"Categorical columns are : {categorical_columns}")
-        return pd.get_dummies(df, columns=categorical_columns, prefix_sep='=')
+        return pd.get_dummies(df, columns=categorical_columns, prefix_sep='=', dtype=int)
 
 
 class Scale(PreprocessingOperation):

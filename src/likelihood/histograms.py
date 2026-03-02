@@ -48,7 +48,7 @@ class UniBinHistogram(Histogram):
 
 class MultiBinsHistogram(Histogram):
     def compute_hist_prob(self, activation: float) -> float:
-        if (activation - self.lower_bound) < e.EPSILON:
+        if (activation - self.lower_bound) < -e.EPSILON:
             return e.LOW_SMOOTHED_PROB
         else:
             cur_bin_id = ((activation - self.lower_bound) / self.step)
@@ -57,10 +57,8 @@ class MultiBinsHistogram(Histogram):
                 raise ValueError(f'ERROR compute_hist_prob : cur_bin_id {cur_bin_id} is undefined')
             if len(self.freq) <= cur_bin_id:
                 return e.LOW_SMOOTHED_PROB
-            if self.freq[cur_bin_id] == 0:
-                return e.LOW_SMOOTHED_PROB
 
-            return self.freq[cur_bin_id] / np.sum(self.freq)
+            return float(self.freq[cur_bin_id] / np.sum(self.freq))
 
 
 class HistogramConstructor:

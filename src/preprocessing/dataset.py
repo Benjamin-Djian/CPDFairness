@@ -33,11 +33,8 @@ class IndexDataset(Dataset):
 
         return idx, x, y
 
-    def get_feature_columns(self) -> list[str]:
-        return self.feature_columns
-
     def get_index_col(self, col: str) -> int:
-        feature_columns = self.get_feature_columns()
+        feature_columns = self.feature_columns
         try:
             return feature_columns.index(col)
         except ValueError:

@@ -39,7 +39,7 @@ class ClassificationFilter(ActivationFilter):
 class FeatureFilter(ActivationFilter):
     """Filter by feature column value."""
 
-    def __init__(self, column_name: str, value: int, dataset: IndexDataset):
+    def __init__(self, column_name: str, value: int | float, dataset: IndexDataset):
         self.column_name = column_name
         self.value = value
         self.dataset = dataset
