@@ -16,6 +16,8 @@ def get_csv_column_types(key: str) -> OrderedDict[str, type]:
         "bool": bool
     }
     header = os.environ.get(key)
+    if header is None:
+        raise ValueError(f"Header {key} not found")
     column_dict = OrderedDict()
     for key, value in (item.split(":") for item in header.split(",")):
         column_dict[key] = type_map[value]
@@ -32,7 +34,7 @@ def getenv_int(key: str) -> int:
 
 
 def getenv_float(key: str) -> float:
-    """Retrieve an environment variable as int. Raises KeyError if missing."""
+    """Retrieve an environment variable as float. Raises KeyError if missing."""
     value = os.environ.get(key)
     if value is None:
         raise KeyError(f"Required environment variable '{key}' not found.")

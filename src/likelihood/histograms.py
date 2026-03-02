@@ -57,6 +57,8 @@ class MultiBinsHistogram(Histogram):
                 raise ValueError(f'ERROR compute_hist_prob : cur_bin_id {cur_bin_id} is undefined')
             if len(self.freq) <= cur_bin_id:
                 return e.LOW_SMOOTHED_PROB
+            if self.freq[cur_bin_id] == 0:
+                return e.LOW_SMOOTHED_PROB
 
             return float(self.freq[cur_bin_id] / np.sum(self.freq))
 
