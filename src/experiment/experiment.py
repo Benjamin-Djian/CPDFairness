@@ -96,9 +96,9 @@ class Experiment:
         return model
 
     @staticmethod
-    def get_histograms(model: Classificator,
-                       train_loader: DataLoader,
-                       filters: list[ActivationFilter] | None = None) -> list[Histogram]:
+    def _get_histograms(model: Classificator,
+                        train_loader: DataLoader,
+                        filters: list[ActivationFilter] | None = None) -> list[Histogram]:
         extractor = ActivationExtractor(model)
         histograms = []
         for node_id in range(model.last_hidden_dim):
@@ -120,15 +120,15 @@ class Experiment:
                                          value=1,
                                          dataset=train_loader.dataset)]
 
-        histograms_group_0 = self.get_histograms(model, train_loader, filters_group_0)
-        histograms_group_1 = self.get_histograms(model, train_loader, filters_group_1)
+        histograms_group_0 = self._get_histograms(model, train_loader, filters_group_0)
+        histograms_group_1 = self._get_histograms(model, train_loader, filters_group_1)
         return histograms_group_0, histograms_group_1
 
     @staticmethod
-    def get_likelihood(model: Classificator,
-                       test_loader: DataLoader,
-                       histograms: list[Histogram],
-                       filters: list[ActivationFilter] | None = None) -> list[LikelihoodScore]:
+    def _get_likelihood(model: Classificator,
+                        test_loader: DataLoader,
+                        histograms: list[Histogram],
+                        filters: list[ActivationFilter] | None = None) -> list[LikelihoodScore]:
 
         extractor = ActivationExtractor(model)
         calculator = LikelihoodCalculator(extractor)
@@ -153,10 +153,10 @@ class Experiment:
                                          value=1,
                                          dataset=test_loader.dataset)]
 
-        likelihoods_g0_h0 = self.get_likelihood(model, test_loader, histograms_group_0, filters_group_0)
-        likelihoods_g0_h1 = self.get_likelihood(model, test_loader, histograms_group_1, filters_group_0)
-        likelihoods_g1_h0 = self.get_likelihood(model, test_loader, histograms_group_0, filters_group_1)
-        likelihoods_g1_h1 = self.get_likelihood(model, test_loader, histograms_group_1, filters_group_1)
+        likelihoods_g0_h0 = self._get_likelihood(model, test_loader, histograms_group_0, filters_group_0)
+        likelihoods_g0_h1 = self._get_likelihood(model, test_loader, histograms_group_1, filters_group_0)
+        likelihoods_g1_h0 = self._get_likelihood(model, test_loader, histograms_group_0, filters_group_1)
+        likelihoods_g1_h1 = self._get_likelihood(model, test_loader, histograms_group_1, filters_group_1)
 
         return likelihoods_g0_h0, likelihoods_g0_h1, likelihoods_g1_h0, likelihoods_g1_h1
 
