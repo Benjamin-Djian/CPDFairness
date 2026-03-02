@@ -32,6 +32,13 @@ class Histogram(ABC):
 
 
 class UniBinHistogram(Histogram):
+    def __init__(self, node_id: int, bins: np.ndarray, freq: np.ndarray):
+        if bins.shape[0] > 2:
+            raise ValueError(f"Histogram with only one bin has too many bin values {bins.shape[0]}")
+        if freq.shape[0] > 1:
+            raise ValueError(f"Histogram with only one bin has too many freq values {freq.shape[0]}")
+        super().__init__(node_id, bins, freq)
+
     def compute_hist_prob(self, activation: float) -> float:
         if abs(activation - self.lower_bound) > e.EPSILON:
             return e.LOW_SMOOTHED_PROB
