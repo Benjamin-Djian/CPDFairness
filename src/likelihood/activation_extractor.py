@@ -5,6 +5,9 @@ from torch.utils.data import DataLoader
 
 from src.model.binary_classificator import BinaryClassificator
 from src.preprocessing.dataset import IndexDataset
+from src.utils.logger import LoggerFactory
+
+logger = LoggerFactory.get_logger(name=__name__)
 
 
 class ActivationFilter(ABC):
@@ -12,7 +15,6 @@ class ActivationFilter(ABC):
 
     @abstractmethod
     def get_mask(self,
-                 indexes: torch.Tensor,
                  inputs: torch.Tensor,
                  targets: torch.Tensor,
                  predictions: torch.Tensor,
@@ -27,7 +29,6 @@ class ClassificationFilter(ActivationFilter):
         self.keep_correct = keep_correct
 
     def get_mask(self,
-                 indexes: torch.Tensor,
                  inputs: torch.Tensor,
                  targets: torch.Tensor,
                  predictions: torch.Tensor,
@@ -45,13 +46,30 @@ class FeatureFilter(ActivationFilter):
         self.dataset = dataset
 
     def get_mask(self,
-                 indexes: torch.Tensor,
                  inputs: torch.Tensor,
                  targets: torch.Tensor,
                  predictions: torch.Tensor,
                  activations: torch.Tensor) -> torch.Tensor:
         col_idx = self.dataset.get_index_col(self.column_name)
         return inputs[:, col_idx] == self.value
+
+
+class PredictionFilter(ActivationFilter):
+    """Filter by group prediction"""
+
+    def __init__(self, column_name: str, value: int, dataset: IndexDataset):
+        self.column_name = column_name
+        self.value = value
+        if not isinstance(value, int):
+            logger.warning("Using value not of type int to filter on int Tensor")
+        self.dataset = dataset
+
+    def get_mask(self,
+                 inputs: torch.Tensor,
+                 targets: torch.Tensor,
+                 predictions: torch.Tensor,
+                 activations: torch.Tensor) -> torch.Tensor:
+        return predictions == int(self.value)
 
 
 class FilterChain:
@@ -68,7 +86,7 @@ class FilterChain:
               activations: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         mask = None
         for f in self.filters:
-            f_mask = f.get_mask(indexes, inputs, targets, predictions, activations)
+            f_mask = f.get_mask(inputs, targets, predictions, activations)
             mask = f_mask if mask is None else mask & f_mask
 
         return indexes[mask], activations[mask]
@@ -138,8 +156,6 @@ class ActivationExtractor:
 
         if filters:
             filter_chain = FilterChain(filters)
-            indexes, activations = filter_chain.apply(
-                indexes, inputs, targets, predictions, activations
-            )
+            indexes, activations = filter_chain.apply(indexes, inputs, targets, predictions, activations)
 
         return ActivationGetter(activations=activations, indexes=indexes)

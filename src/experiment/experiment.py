@@ -5,7 +5,7 @@ import yaml
 from torch.utils.data import DataLoader
 
 from src.likelihood.activation_extractor import ActivationExtractor, ActivationFilter, ClassificationFilter, \
-    FeatureFilter
+    FeatureFilter, PredictionFilter
 from src.likelihood.histograms import HistogramConstructor, Histogram
 from src.likelihood.likelihood import LikelihoodCalculator, LikelihoodScore
 from src.model.binary_classificator import BinaryClassificator
@@ -75,16 +75,17 @@ class Experiment:
         logger.debug(history)
         return model
 
-    def get_filter_hist(self, train_loader: DataLoader) -> tuple[list[FeatureFilter], list[FeatureFilter]]:
+    @staticmethod
+    def get_filter_hist(train_loader: DataLoader) -> tuple[list[ActivationFilter], list[ActivationFilter]]:
         train_dataset = cast(IndexDataset, train_loader.dataset)  # Casting to avoid type checks
         filters_correct_group_0 = [ClassificationFilter(keep_correct=True),
-                                   FeatureFilter(column_name=train_dataset.target_column,
-                                                 value=0,
-                                                 dataset=train_dataset)]
+                                   PredictionFilter(column_name=train_dataset.target_column,
+                                                    value=0,
+                                                    dataset=train_dataset)]
         filters_correct_group_1 = [ClassificationFilter(keep_correct=True),
-                                   FeatureFilter(column_name=train_dataset.target_column,
-                                                 value=1,
-                                                 dataset=train_dataset)]
+                                   PredictionFilter(column_name=train_dataset.target_column,
+                                                    value=1,
+                                                    dataset=train_dataset)]
         return filters_correct_group_0, filters_correct_group_1
 
     @staticmethod
