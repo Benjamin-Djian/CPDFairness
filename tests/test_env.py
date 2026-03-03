@@ -62,6 +62,7 @@ class TestGetEnvFloat:
             with pytest.raises(ValueError):
                 getenv_float("TEST_INVALID")
 
+
 class TestGetEnvStr:
     """Tests for getenv_str function."""
 
@@ -76,6 +77,7 @@ class TestGetEnvStr:
         with patch.dict(os.environ, {}, clear=True):
             with pytest.raises(KeyError, match="Required environment variable"):
                 getenv_str("NONEXISTENT_VAR")
+
 
 class TestGetEnvList:
     """Tests for getenv_list function."""

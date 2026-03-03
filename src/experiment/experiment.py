@@ -8,7 +8,7 @@ from src.likelihood.activation_extractor import ActivationExtractor, ActivationF
     FeatureFilter
 from src.likelihood.histograms import HistogramConstructor, Histogram
 from src.likelihood.likelihood import LikelihoodCalculator, LikelihoodScore
-from src.model.classificator import Classificator
+from src.model.binary_classificator import BinaryClassificator
 from src.model.trainer import Trainer
 from src.preprocessing.preprocessing import AdultPreprocessing, GermanCreditPreprocessing, LawSchoolPreprocessing, \
     Preprocessing
@@ -60,13 +60,12 @@ class Experiment:
 
         return train_loader, val_loader, test_loader
 
-    def train_model(self, train_loader: DataLoader, val_loader: DataLoader) -> Classificator:
-        model = Classificator(input_dim=self.config["model"]["input_dim"],
-                              hidden_dims=self.config["model"]["hidden_dims"],
-                              num_classes=self.config["model"]["num_classes"],
-                              negative_slope=self.config["model"]["neg_slope"],
-                              dropout=self.config["model"]["dropout"],
-                              seed=self.config["experiment"]["seed"])
+    def train_model(self, train_loader: DataLoader, val_loader: DataLoader) -> BinaryClassificator:
+        model = BinaryClassificator(input_dim=self.config["model"]["input_dim"],
+                                    hidden_dims=self.config["model"]["hidden_dims"],
+                                    negative_slope=self.config["model"]["neg_slope"],
+                                    dropout=self.config["model"]["dropout"],
+                                    seed=self.config["experiment"]["seed"])
 
         trainer = Trainer(model=model, learning_rate=self.config["training"]["learning_rate"])
 
@@ -76,7 +75,7 @@ class Experiment:
         return model
 
     @staticmethod
-    def _get_histograms(model: Classificator,
+    def _get_histograms(model: BinaryClassificator,
                         train_loader: DataLoader,
                         filters: list[ActivationFilter] | None = None) -> list[Histogram]:
         extractor = ActivationExtractor(model)
@@ -88,7 +87,7 @@ class Experiment:
         return histograms
 
     def get_hist_by_sens_group(self,
-                               model: Classificator,
+                               model: BinaryClassificator,
                                train_loader: DataLoader) -> tuple[list[Histogram], list[Histogram]]:
 
         filters_group_0 = [ClassificationFilter(keep_correct=True),
@@ -105,7 +104,7 @@ class Experiment:
         return histograms_group_0, histograms_group_1
 
     @staticmethod
-    def _get_likelihood(model: Classificator,
+    def _get_likelihood(model: BinaryClassificator,
                         test_loader: DataLoader,
                         histograms: list[Histogram],
                         filters: list[ActivationFilter] | None = None) -> list[LikelihoodScore]:
@@ -117,7 +116,7 @@ class Experiment:
 
     def get_likelihood_by_sens_group(
             self,
-            model: Classificator,
+            model: BinaryClassificator,
             test_loader: DataLoader,
             histograms_group_0: list[Histogram],
             histograms_group_1: list[Histogram]) -> tuple[

@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 
-from src.model.classificator import Classificator
+from src.model.binary_classificator import BinaryClassificator
 from src.utils.logger import LoggerFactory
 
 logger = LoggerFactory.get_logger(name=__name__)
@@ -23,7 +23,7 @@ class TrainHistory:
 
 
 class Trainer:
-    def __init__(self, model: Classificator, learning_rate: float):
+    def __init__(self, model: BinaryClassificator, learning_rate: float):
         self.model = model
         self.optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
         self.criterion = nn.NLLLoss()

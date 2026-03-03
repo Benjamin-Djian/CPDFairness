@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import torch
 from torch.utils.data import DataLoader
 
-from src.model.classificator import Classificator
+from src.model.binary_classificator import BinaryClassificator
 from src.preprocessing.dataset import IndexDataset
 
 
@@ -104,7 +104,7 @@ class ActivationGetter:
 class ActivationExtractor:
     """Extract activation levels for all neurons, for all inputs."""
 
-    def __init__(self, classificator: Classificator):
+    def __init__(self, classificator: BinaryClassificator):
         self.classificator = classificator
 
     def extract(

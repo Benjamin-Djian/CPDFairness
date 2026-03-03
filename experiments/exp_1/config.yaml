@@ -13,7 +13,6 @@ model:
   hidden_dims:
     - 128
     - 128
-  num_classes: 2
   neg_slope: 0.2
   dropout: 0.1
 

@@ -52,9 +52,9 @@ class TestActivationWriter:
 
         mock_getter = MagicMock()
         mock_activ_index = MagicMock()
-        type(mock_activ_index).__getitem__ = lambda self, i: 0.1
+        type(mock_activ_index).__getitem__ = lambda x, i: 0.1
         mock_activ_index.shape = MagicMock()
-        mock_activ_index.shape.__getitem__ = lambda self, i: 2
+        mock_activ_index.shape.__getitem__ = lambda x, i: 2
         mock_getter.iterate_indexes.return_value = [(0, mock_activ_index)]
 
         result = list(writer.make_iterable(mock_getter))

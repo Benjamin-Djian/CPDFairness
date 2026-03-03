@@ -26,7 +26,6 @@ model:
   hidden_dims:
     - 128
     - 64
-  num_classes: 2
   neg_slope: 0.2
   dropout: 0.0
 
@@ -75,7 +74,6 @@ model:
   input_dim: 103
   hidden_dims:
     - 128
-  num_classes: 2
 
 training:
   optimizer: Adam

@@ -9,7 +9,7 @@ from src.likelihood.histograms import (
     MultiBinsHistogram,
     HistogramConstructor,
 )
-from src.model.classificator import Classificator
+from src.model.binary_classificator import BinaryClassificator
 
 
 class TestUniBinHistogram:
@@ -216,7 +216,7 @@ class TestHistogramConstructor:
 
     def test_init(self):
         """Test HistogramConstructor initialization."""
-        model = Classificator(input_dim=10, hidden_dims=[5], num_classes=2, seed=42)
+        model = BinaryClassificator(input_dim=10, hidden_dims=[5], seed=42)
         extractor = ActivationExtractor(model)
 
         constructor = HistogramConstructor(node_id=0, act_extract=extractor)
@@ -226,7 +226,7 @@ class TestHistogramConstructor:
 
     def test_check_null_std_negative_raises(self):
         """Test check_null_std raises on negative std."""
-        model = Classificator(input_dim=10, hidden_dims=[5], num_classes=2, seed=42)
+        model = BinaryClassificator(input_dim=10, hidden_dims=[5], seed=42)
         extractor = ActivationExtractor(model)
 
         constructor = HistogramConstructor(node_id=0, act_extract=extractor)
@@ -236,7 +236,7 @@ class TestHistogramConstructor:
 
     def test_check_null_std_positive_ok(self):
         """Test check_null_std passes on positive std."""
-        model = Classificator(input_dim=10, hidden_dims=[5], num_classes=2, seed=42)
+        model = BinaryClassificator(input_dim=10, hidden_dims=[5], seed=42)
         extractor = ActivationExtractor(model)
 
         constructor = HistogramConstructor(node_id=0, act_extract=extractor)
@@ -245,7 +245,7 @@ class TestHistogramConstructor:
 
     def test_construct_single_bins(self):
         """Test construct_single_bins creates UniBinHistogram."""
-        model = Classificator(input_dim=10, hidden_dims=[5], num_classes=2, seed=42)
+        model = BinaryClassificator(input_dim=10, hidden_dims=[5], seed=42)
         extractor = ActivationExtractor(model)
 
         constructor = HistogramConstructor(node_id=0, act_extract=extractor)
@@ -262,7 +262,7 @@ class TestHistogramConstructor:
 
     def test_construct_mult_bins(self):
         """Test construct_mult_bins creates MultiBinsHistogram."""
-        model = Classificator(input_dim=10, hidden_dims=[5], num_classes=2, seed=42)
+        model = BinaryClassificator(input_dim=10, hidden_dims=[5], seed=42)
         extractor = ActivationExtractor(model)
 
         constructor = HistogramConstructor(node_id=0, act_extract=extractor)

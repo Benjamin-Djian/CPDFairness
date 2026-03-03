@@ -2,21 +2,20 @@ from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
-import torch
 from torch.utils.data import DataLoader
 
-from src.preprocessing.preprocessing import (
-    Preprocessing,
-    AdultPreprocessing,
-    GermanCreditPreprocessing,
-    LawSchoolPreprocessing,
-)
 from src.preprocessing.prepro_operations import (
     PreprocessingOperation,
     MakeCategorical,
     Scale,
     ToFloat,
     TargetAtTheEnd,
+)
+from src.preprocessing.preprocessing import (
+    Preprocessing,
+    AdultPreprocessing,
+    GermanCreditPreprocessing,
+    LawSchoolPreprocessing,
 )
 
 
@@ -36,7 +35,7 @@ class TestPreprocessing:
         """Test Preprocessing initialization."""
         operations: list[PreprocessingOperation] = [Scale()]
         prepro = Preprocessing(sample_df, operations, "target", "sens_attr")
-        
+
         assert prepro.df is not None
         assert prepro.target_column == "target"
         assert prepro.sens_attr_column == "sens_attr"
@@ -52,9 +51,9 @@ class TestPreprocessing:
         """Test generate_dataset returns IndexDataset."""
         operations: list[PreprocessingOperation] = [ToFloat()]
         prepro = Preprocessing(sample_df, operations, "target", "sens_attr")
-        
+
         dataset = prepro.generate_dataset(sample_df)
-        
+
         assert dataset is not None
         assert dataset.target_column == "target"
         assert dataset.sens_attr_column == "sens_attr"
@@ -63,19 +62,19 @@ class TestPreprocessing:
         """Test generate_loaders returns train, val, test loaders."""
         operations: list[PreprocessingOperation] = [ToFloat()]
         prepro = Preprocessing(sample_df, operations, "target", "sens_attr")
-        
+
         sample_df_clean = sample_df.copy()
         sample_df_clean["target"] = sample_df_clean["target"].astype(float)
         sample_df_clean["sens_attr"] = sample_df_clean["sens_attr"].astype(float)
         prepro.df = sample_df_clean
-        
+
         train_loader, val_loader, test_loader = prepro.generate_loaders(
             prop_train=0.5,
             prop_valid=0.25,
             batch_size=1,
             seed=42
         )
-        
+
         assert isinstance(train_loader, DataLoader)
         assert isinstance(val_loader, DataLoader)
         assert isinstance(test_loader, DataLoader)
@@ -90,9 +89,9 @@ class TestAdultPreprocessing:
         """Test AdultPreprocessing initialization."""
         mock_df = MagicMock()
         mock_pd.read_csv.return_value = mock_df
-        
+
         prepro = AdultPreprocessing("sex")
-        
+
         assert prepro.target_column is not None
         assert prepro.sens_attr_column == "sex"
 
@@ -103,9 +102,9 @@ class TestAdultPreprocessing:
         """Test AdultPreprocessing has correct operations."""
         mock_df = MagicMock()
         mock_pd.read_csv.return_value = mock_df
-        
+
         prepro = AdultPreprocessing("sex")
-        
+
         assert len(prepro.operations) == 4
         assert isinstance(prepro.operations[0], MakeCategorical)
         assert isinstance(prepro.operations[1], Scale)
@@ -122,9 +121,9 @@ class TestGermanCreditPreprocessing:
         """Test GermanCreditPreprocessing initialization."""
         mock_df = MagicMock()
         mock_pd.read_csv.return_value = mock_df
-        
+
         prepro = GermanCreditPreprocessing("sex")
-        
+
         assert prepro.sens_attr_column == "sex"
 
 
@@ -137,7 +136,7 @@ class TestLawSchoolPreprocessing:
         """Test LawSchoolPreprocessing initialization."""
         mock_df = MagicMock()
         mock_pd.read_csv.return_value = mock_df
-        
+
         prepro = LawSchoolPreprocessing("sex")
-        
+
         assert prepro.sens_attr_column == "sex"

@@ -9,7 +9,7 @@ from src.likelihood.activation_extractor import (
     ActivationGetter,
     ActivationExtractor,
 )
-from src.model.classificator import Classificator
+from src.model.binary_classificator import BinaryClassificator
 from src.preprocessing.dataset import IndexDataset
 
 
@@ -204,7 +204,7 @@ class TestActivationExtractor:
 
     def test_init(self):
         """Test ActivationExtractor initialization."""
-        model = Classificator(input_dim=10, hidden_dims=[5], num_classes=2, seed=42)
+        model = BinaryClassificator(input_dim=10, hidden_dims=[5], seed=42)
         extractor = ActivationExtractor(model)
 
         assert extractor.classificator is model

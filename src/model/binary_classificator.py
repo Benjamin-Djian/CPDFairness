@@ -6,10 +6,9 @@ from src.utils.logger import LoggerFactory
 logger = LoggerFactory.get_logger(name=__name__)
 
 
-class Classificator(nn.Module):
+class BinaryClassificator(nn.Module):
     def __init__(self, input_dim: int,
                  hidden_dims: list[int],
-                 num_classes: int,
                  negative_slope=0.2,
                  dropout: float = 0.0,
                  seed=42):
@@ -31,7 +30,7 @@ class Classificator(nn.Module):
 
         self.last_hidden_dim = hidden_dims[-1]
         self.seq = nn.Sequential(*layers)
-        self.output = nn.Sequential(nn.Linear(prev_dim, num_classes), nn.LogSoftmax(dim=1))
+        self.output = nn.Sequential(nn.Linear(prev_dim, 2), nn.LogSoftmax(dim=1))
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         hidden_data = self.seq(x)

@@ -207,7 +207,7 @@ class TestIterateRows:
 
     def test_iterate_rows_empty_file_warns(self, tmp_path):
         """Test iterate_rows warns on empty file."""
-        header= OrderedDict([("col1", int)])
+        header = OrderedDict([("col1", int)])
         reader = ConcreteFileReader(header)
 
         csv_file = tmp_path / "empty.csv"
@@ -218,7 +218,7 @@ class TestIterateRows:
 
     def test_iterate_rows_invalid_header_raises(self, tmp_path):
         """Test iterate_rows raises on mismatched header."""
-        header= OrderedDict([("col1", int), ("col2", str)])
+        header = OrderedDict([("col1", int), ("col2", str)])
         reader = ConcreteFileReader(header)
 
         csv_file = tmp_path / "test.csv"
@@ -231,7 +231,7 @@ class TestIterateRows:
 
     def test_iterate_rows_invalid_row_length_raises(self, tmp_path):
         """Test iterate_rows raises on invalid row length."""
-        header= OrderedDict([("col1", int), ("col2", str)])
+        header = OrderedDict([("col1", int), ("col2", str)])
         reader = ConcreteFileReader(header)
 
         csv_file = tmp_path / "test.csv"
