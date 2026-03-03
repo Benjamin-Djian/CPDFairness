@@ -13,6 +13,8 @@ def valid_config_file(tmp_path):
     config_content = """
 experiment:
   seed: 42
+  save_hist: false
+  save_likelihood: true
 
 data:
   name: adult
@@ -46,6 +48,8 @@ def config_missing_section(tmp_path):
     config_content = """
 experiment:
   seed: 42
+  save_hist: false
+  save_likelihood: true
 
 data:
   name: adult

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import yaml
 from torch.utils.data import DataLoader
@@ -10,10 +10,11 @@ from src.likelihood.histograms import HistogramConstructor, Histogram
 from src.likelihood.likelihood import LikelihoodCalculator, LikelihoodScore
 from src.model.binary_classificator import BinaryClassificator
 from src.model.trainer import Trainer
+from src.preprocessing.dataset import IndexDataset
 from src.preprocessing.preprocessing import AdultPreprocessing, GermanCreditPreprocessing, LawSchoolPreprocessing, \
     Preprocessing
 from src.utils.env import REQUIRED_CONFIG_KEYS
-from src.utils.file_writer import LikelihoodWriter
+from src.utils.file_writer import LikelihoodWriter, HistWriter
 from src.utils.logger import LoggerFactory
 
 logger = LoggerFactory.get_logger(name=__name__)
@@ -70,9 +71,21 @@ class Experiment:
         trainer = Trainer(model=model, learning_rate=self.config["training"]["learning_rate"])
 
         history = trainer.fit(train_loader, val_loader, epochs=self.config["training"]["epochs"])
-        logger.info(f"Model trained with val_accuracy of {history.val_acc[-1]*100:.3f}%")
+        logger.info(f"Model trained with val_accuracy of {history.val_acc[-1] * 100:.3f}%")
         logger.debug(history)
         return model
+
+    def get_filter_hist(self, train_loader: DataLoader) -> tuple[list[FeatureFilter], list[FeatureFilter]]:
+        train_dataset = cast(IndexDataset, train_loader.dataset)  # Casting to avoid type checks
+        filters_correct_group_0 = [ClassificationFilter(keep_correct=True),
+                                   FeatureFilter(column_name=self.config["data"]["sens_attr"],
+                                                 value=0,
+                                                 dataset=train_dataset)]
+        filters_correct_group_1 = [ClassificationFilter(keep_correct=True),
+                                   FeatureFilter(column_name=self.config["data"]["sens_attr"],
+                                                 value=1,
+                                                 dataset=train_dataset)]
+        return filters_correct_group_0, filters_correct_group_1
 
     @staticmethod
     def _get_histograms(model: BinaryClassificator,
@@ -86,22 +99,22 @@ class Experiment:
             histograms.append(hist)
         return histograms
 
-    def get_hist_by_sens_group(self,
-                               model: BinaryClassificator,
-                               train_loader: DataLoader) -> tuple[list[Histogram], list[Histogram]]:
+    @staticmethod
+    def save_histograms(save_dir: Path, hist_g0: list[Histogram], hist_g1: list[Histogram]) -> None:
+        writer = HistWriter()
+        writer.write(path=save_dir / "histogram_g0.csv", content=hist_g0)
+        writer.write(path=save_dir / "histogram_g1.csv", content=hist_g1)
 
-        filters_group_0 = [ClassificationFilter(keep_correct=True),
-                           FeatureFilter(column_name=self.config["data"]["sens_attr"],
+    def get_filter_likelihood(self, test_loader: DataLoader) -> tuple[list[FeatureFilter], list[FeatureFilter]]:
+        test_dataset = cast(IndexDataset, test_loader.dataset)
+        filters_group_0 = [FeatureFilter(column_name=self.config["data"]["sens_attr"],
                                          value=0,
-                                         dataset=train_loader.dataset)]
-        filters_group_1 = [ClassificationFilter(keep_correct=True),
-                           FeatureFilter(column_name=self.config["data"]["sens_attr"],
+                                         dataset=test_dataset)]
+        filters_group_1 = [FeatureFilter(column_name=self.config["data"]["sens_attr"],
                                          value=1,
-                                         dataset=train_loader.dataset)]
+                                         dataset=test_dataset)]
 
-        histograms_group_0 = self._get_histograms(model, train_loader, filters_group_0)
-        histograms_group_1 = self._get_histograms(model, train_loader, filters_group_1)
-        return histograms_group_0, histograms_group_1
+        return filters_group_0, filters_group_1
 
     @staticmethod
     def _get_likelihood(model: BinaryClassificator,
@@ -114,37 +127,12 @@ class Experiment:
         likelihoods = calculator.compute_likelihood(test_loader, histograms, filters=filters)
         return likelihoods
 
-    def get_likelihood_by_sens_group(
-            self,
-            model: BinaryClassificator,
-            test_loader: DataLoader,
-            histograms_group_0: list[Histogram],
-            histograms_group_1: list[Histogram]) -> tuple[
-        list[LikelihoodScore],
-        list[LikelihoodScore],
-        list[LikelihoodScore],
-        list[LikelihoodScore]]:
-
-        filters_group_0 = [FeatureFilter(column_name=self.config["data"]["sens_attr"],
-                                         value=0,
-                                         dataset=test_loader.dataset)]
-        filters_group_1 = [FeatureFilter(column_name=self.config["data"]["sens_attr"],
-                                         value=1,
-                                         dataset=test_loader.dataset)]
-
-        likelihoods_g0_h0 = self._get_likelihood(model, test_loader, histograms_group_0, filters_group_0)
-        likelihoods_g0_h1 = self._get_likelihood(model, test_loader, histograms_group_1, filters_group_0)
-        likelihoods_g1_h0 = self._get_likelihood(model, test_loader, histograms_group_0, filters_group_1)
-        likelihoods_g1_h1 = self._get_likelihood(model, test_loader, histograms_group_1, filters_group_1)
-
-        return likelihoods_g0_h0, likelihoods_g0_h1, likelihoods_g1_h0, likelihoods_g1_h1
-
     @staticmethod
     def save_likelihoods(save_dir: Path,
                          likelihoods_g0_h0: list[LikelihoodScore],
                          likelihoods_g0_h1: list[LikelihoodScore],
                          likelihoods_g1_h0: list[LikelihoodScore],
-                         likelihoods_g1_h1: list[LikelihoodScore]):
+                         likelihoods_g1_h1: list[LikelihoodScore]) -> None:
         writer = LikelihoodWriter()
         writer.write(path=save_dir / "likelihoods_g0_h0.csv", content=likelihoods_g0_h0)
         writer.write(path=save_dir / "likelihoods_g0_h1.csv", content=likelihoods_g0_h1)
@@ -160,9 +148,18 @@ class Experiment:
         model = self.train_model(train_loader, val_loader)
 
         logger.info("Constructing histograms")
-        histograms_g0, histograms_g1 = self.get_hist_by_sens_group(model, train_loader)
+        filter_correct_g0, filter_correct_g1 = self.get_filter_hist(train_loader)
+        histograms_g0 = self._get_histograms(model, train_loader, filter_correct_g0)
+        histograms_g1 = self._get_histograms(model, train_loader, filter_correct_g1)
+        if self.config["experiment"]["save_hist"]:
+            self.save_histograms(save_path, histograms_g0, histograms_g1)
 
         logger.info("Computing likelihood")
-        likelihoods_groups = self.get_likelihood_by_sens_group(model, test_loader, histograms_g0, histograms_g1)
-        likelihoods_g0_h0, likelihoods_g0_h1, likelihoods_g1_h0, likelihoods_g1_h1 = likelihoods_groups
-        self.save_likelihoods(save_path, likelihoods_g0_h0, likelihoods_g0_h1, likelihoods_g1_h0, likelihoods_g1_h1)
+        filter_g0, filter_g1 = self.get_filter_likelihood(test_loader)
+        likelihoods_g0_h0 = self._get_likelihood(model, test_loader, histograms_g0, filter_g0)
+        likelihoods_g0_h1 = self._get_likelihood(model, test_loader, histograms_g1, filter_g0)
+        likelihoods_g1_h0 = self._get_likelihood(model, test_loader, histograms_g0, filter_g1)
+        likelihoods_g1_h1 = self._get_likelihood(model, test_loader, histograms_g1, filter_g1)
+        if self.config["experiment"]["save_likelihood"]:
+            self.save_likelihoods(save_path, likelihoods_g0_h0, likelihoods_g0_h1, likelihoods_g1_h0, likelihoods_g1_h1)
+        logger.info("End of the experiment")

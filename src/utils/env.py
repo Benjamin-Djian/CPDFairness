@@ -60,7 +60,7 @@ def getenv_str(key: str) -> str:
 # ----- CONFIG -----
 
 REQUIRED_CONFIG_KEYS = {
-    "experiment": ["seed"],
+    "experiment": ["seed", "save_hist", "save_likelihood"],
     "data": ["name", "prop_train", "prop_valid", "batch_size", "sens_attr"],
     "model": ["input_dim", "hidden_dims", "neg_slope", "dropout"],
     "training": ["epochs", "learning_rate"],
