@@ -6,8 +6,8 @@ experiment:
 data:
   name: adult
   sens_attr: sex
-  prop_train: 0.8
-  prop_valid: 0.1
+  prop_train: 0.6
+  prop_valid: 0.2
   batch_size: 64
 
 model:
@@ -15,8 +15,8 @@ model:
   hidden_dims:
     - 128
     - 128
-  neg_slope: 0.2
-  dropout: 0.1
+  neg_slope: 0.01
+  dropout: 0.5
 
 training:
   learning_rate: 0.01

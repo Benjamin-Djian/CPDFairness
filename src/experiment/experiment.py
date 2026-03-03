@@ -78,11 +78,11 @@ class Experiment:
     def get_filter_hist(self, train_loader: DataLoader) -> tuple[list[FeatureFilter], list[FeatureFilter]]:
         train_dataset = cast(IndexDataset, train_loader.dataset)  # Casting to avoid type checks
         filters_correct_group_0 = [ClassificationFilter(keep_correct=True),
-                                   FeatureFilter(column_name=self.config["data"]["sens_attr"],
+                                   FeatureFilter(column_name=train_dataset.target_column,
                                                  value=0,
                                                  dataset=train_dataset)]
         filters_correct_group_1 = [ClassificationFilter(keep_correct=True),
-                                   FeatureFilter(column_name=self.config["data"]["sens_attr"],
+                                   FeatureFilter(column_name=train_dataset.target_column,
                                                  value=1,
                                                  dataset=train_dataset)]
         return filters_correct_group_0, filters_correct_group_1
