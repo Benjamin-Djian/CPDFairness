@@ -72,21 +72,25 @@ class PlotCPDDistr(Visualisation):
     def __init__(self,
                  serie_1: list[LikelihoodScore],
                  serie_2: list[LikelihoodScore],
-                 resolution: int,
                  legend_1: str,
-                 legend_2: str):
+                 legend_2: str,
+                 nbr_bins: int = 10):
         super().__init__(title="",
-                         x_label="",
-                         y_label="")
-        self.resolution = resolution
+                         x_label="Activation Levels",
+                         y_label="Percentage of input")
         self.legend_1 = legend_1
         self.legend_2 = legend_2
         self.serie_1 = [lh.score for lh in serie_1]
         self.serie_2 = [lh.score for lh in serie_2]
+        self.nbr_bins = nbr_bins
 
     def plot(self):
-        self.ax.hist(self.serie_1, label=self.legend_1, color='blue', alpha=0.7)
-        self.ax.hist(self.serie_2, label=self.legend_2, color='red', alpha=0.7)
+        weights_serie_1 = np.ones(len(self.serie_1)) / len(self.serie_1)
+        weights_serie_2 = np.ones(len(self.serie_2)) / len(self.serie_2)
+        self.ax.hist(self.serie_1, bins=self.nbr_bins, weights=weights_serie_1, label=self.legend_1, color='blue',
+                     alpha=0.7)
+        self.ax.hist(self.serie_2, bins=self.nbr_bins, weights=weights_serie_2, label=self.legend_2, color='red',
+                     alpha=0.7)
 
         self.ax.grid()
         self.ax.legend()
