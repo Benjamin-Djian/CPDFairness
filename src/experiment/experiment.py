@@ -1,7 +1,10 @@
 from pathlib import Path
 from typing import Any, cast
 
+import torch
 import yaml
+from torch.nn import NLLLoss
+from torch.optim import Adam
 from torch.utils.data import DataLoader
 
 from src.likelihood.activation_extractor import ActivationExtractor, ActivationFilter, ClassificationFilter, \
@@ -61,6 +64,18 @@ class Experiment:
 
         return train_loader, val_loader, test_loader
 
+    @staticmethod
+    def compute_binary_class_weights(loader: DataLoader) -> torch.Tensor:
+        all_labels = []
+
+        for _, _, labels in loader:
+            all_labels.append(labels)
+
+        all_labels = torch.cat(all_labels)
+        logger.info(all_labels)
+        class_counts = torch.bincount(all_labels.long())
+        return class_counts.float()
+
     def train_model(self, train_loader: DataLoader, val_loader: DataLoader) -> BinaryClassificator:
         model = BinaryClassificator(input_dim=self.config["model"]["input_dim"],
                                     hidden_dims=self.config["model"]["hidden_dims"],
@@ -68,7 +83,14 @@ class Experiment:
                                     dropout=self.config["model"]["dropout"],
                                     seed=self.config["experiment"]["seed"])
 
-        trainer = Trainer(model=model, learning_rate=self.config["training"]["learning_rate"])
+        c_weight = None
+        if self.config["training"]["class_weight"]:
+            c_weight = self.compute_binary_class_weights(train_loader)
+            logger.info(f"Balancing loss function with class weights {c_weight.tolist()}")
+
+        loss_fctn = NLLLoss(c_weight)
+        optimizer = Adam(params=model.parameters(), lr=self.config["training"]["learning_rate"])
+        trainer = Trainer(model=model, loss_fctn=loss_fctn, optimizer=optimizer)
 
         history = trainer.fit(train_loader, val_loader, epochs=self.config["training"]["epochs"])
         logger.info(f"Model trained with val_accuracy of {history.val_acc[-1] * 100:.3f}%")

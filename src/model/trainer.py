@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 
 from src.model.binary_classificator import BinaryClassificator
@@ -23,10 +24,10 @@ class TrainHistory:
 
 
 class Trainer:
-    def __init__(self, model: BinaryClassificator, learning_rate: float):
+    def __init__(self, model: BinaryClassificator, loss_fctn: nn.Module, optimizer: Optimizer):
         self.model = model
-        self.optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-        self.criterion = nn.NLLLoss()
+        self.optimizer = optimizer
+        self.criterion = loss_fctn
 
     def evaluate(self, loader: DataLoader) -> tuple[float, float]:
         self.model.eval()
