@@ -13,12 +13,12 @@ data:
 model:
   input_dim: 103
   hidden_dims:
-    - 128
-    - 128
+    - 256
+    - 256
   neg_slope: 0.01
   dropout: 0.5
 
 training:
   learning_rate: 0.001
   epochs: 100
-  class_weight: false
+  class_weight: true

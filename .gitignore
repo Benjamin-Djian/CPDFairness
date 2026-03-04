@@ -2,3 +2,7 @@
 REFACTOR.md
 AGENTS.md
 **/__pycache__/
+experiments/*
+!experiments/exp_*/
+experiments/exp_*/*
+!experiments/exp_*/config.yaml
