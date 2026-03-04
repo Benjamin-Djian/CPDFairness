@@ -16,7 +16,7 @@ class TestPlotCPDDistr:
         viz = PlotCPDDistr(
             serie_1=scores_1,
             serie_2=scores_2,
-            resolution=10,
+            nbr_bins=10,
             legend_1="G1",
             legend_2="G2"
         )

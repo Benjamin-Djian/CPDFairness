@@ -32,10 +32,9 @@ model:
   dropout: 0.0
 
 training:
-  optimizer: Adam
-  criterion: NLL
   learning_rate: 0.001
-  epochs: 10
+  epochs: 100
+  class_weight: false
 """
     config_file = tmp_path / "config.yaml"
     config_file.write_text(config_content)

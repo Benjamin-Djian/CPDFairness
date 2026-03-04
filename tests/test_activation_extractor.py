@@ -36,13 +36,12 @@ class TestClassificationFilter:
         """Test get_mask keeps correct predictions."""
         f = ClassificationFilter(keep_correct=True)
 
-        indexes = torch.tensor([0, 1, 2])
         inputs = torch.randn(3, 5)
         targets = torch.tensor([0, 1, 0])
         predictions = torch.tensor([0, 1, 1])
         activations = torch.randn(3, 10)
 
-        mask = f.get_mask(indexes, inputs, targets, predictions, activations)
+        mask = f.get_mask(inputs, targets, predictions, activations)
 
         assert mask.tolist() == [True, True, False]
 
@@ -50,13 +49,12 @@ class TestClassificationFilter:
         """Test get_mask keeps incorrect predictions."""
         f = ClassificationFilter(keep_correct=False)
 
-        indexes = torch.tensor([0, 1, 2])
         inputs = torch.randn(3, 5)
         targets = torch.tensor([0, 1, 0])
         predictions = torch.tensor([0, 1, 1])
         activations = torch.randn(3, 10)
 
-        mask = f.get_mask(indexes, inputs, targets, predictions, activations)
+        mask = f.get_mask(inputs, targets, predictions, activations)
 
         assert mask.tolist() == [False, False, True]
 
@@ -74,7 +72,6 @@ class TestFeatureFilter:
         """Test get_mask filters by feature value."""
         f = FeatureFilter(column_name="sens_attr", value=1, dataset=sample_dataset)
 
-        indexes = torch.tensor([0, 1, 2, 3])
         inputs = torch.tensor([
             [1.0, 0.5, 0.0],
             [0.0, 0.5, 0.0],
@@ -85,7 +82,7 @@ class TestFeatureFilter:
         predictions = torch.tensor([0, 1, 0, 1])
         activations = torch.randn(4, 10)
 
-        mask = f.get_mask(indexes, inputs, targets, predictions, activations)
+        mask = f.get_mask(inputs, targets, predictions, activations)
 
         assert mask.tolist() == [False, False, True, True]
 

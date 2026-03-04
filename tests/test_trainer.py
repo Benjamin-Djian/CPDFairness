@@ -1,7 +1,9 @@
 import torch
-from src.model.binary_classificator import BinaryClassificator
 from torch import nn
+from torch.nn import NLLLoss
+from torch.optim import Adam
 
+from src.model.binary_classificator import BinaryClassificator
 from src.model.trainer import Trainer, TrainHistory
 
 
@@ -29,7 +31,7 @@ class TestTrainer:
     def test_init(self):
         """Test Trainer initialization."""
         model = BinaryClassificator(input_dim=10, hidden_dims=[5], seed=42)
-        trainer = Trainer(model=model, learning_rate=0.001)
+        trainer = Trainer(model=model, loss_fctn=NLLLoss(), optimizer=Adam(model.parameters()))
 
         assert trainer.model is model
         assert isinstance(trainer.optimizer, torch.optim.Adam)
