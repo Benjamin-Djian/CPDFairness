@@ -42,6 +42,16 @@ class Experiment:
                 if key not in self.config[section]:
                     raise ValueError(f"Missing required key: '{section}.{key}'")
 
+        for section, keys in self.config.items():
+            if section in REQUIRED_CONFIG_KEYS:
+                for key in keys:
+                    if key not in REQUIRED_CONFIG_KEYS[section]:
+                        logger.warning(
+                            f"Unknown key '{key}' in section '{section}' - this key is not required and will be ignored")
+            else:
+                logger.warning(
+                    f"Unknown section '{section}' this section is not required and will be ignored")
+
     def get_prepro(self) -> Preprocessing:
         if self.config["data"]["name"] == "adult":
             prepro = AdultPreprocessing(self.config["data"]["sens_attr"])

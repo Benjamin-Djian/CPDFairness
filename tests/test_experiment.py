@@ -89,6 +89,79 @@ training:
 
 
 @pytest.fixture
+def config_unknown_key(tmp_path):
+    """Create a config with unknown key in known section."""
+    config_content = """
+experiment:
+  seed: 42
+  save_hist: false
+  save_likelihood: true
+  unknown_key: "this is unknown"
+
+data:
+  name: adult
+  sens_attr: sex
+  prop_train: 0.8
+  prop_valid: 0.1
+  batch_size: 32
+
+model:
+  input_dim: 103
+  hidden_dims:
+    - 128
+    - 64
+  neg_slope: 0.2
+  dropout: 0.0
+
+training:
+  learning_rate: 0.001
+  epochs: 100
+  class_weight: false
+"""
+    config_file = tmp_path / "config_unknown_key.yaml"
+    config_file.write_text(config_content)
+    return config_file
+
+
+@pytest.fixture
+def config_unknown_section(tmp_path):
+    """Create a config with unknown section."""
+    config_content = """
+experiment:
+  seed: 42
+  save_hist: false
+  save_likelihood: true
+
+data:
+  name: adult
+  sens_attr: sex
+  prop_train: 0.8
+  prop_valid: 0.1
+  batch_size: 32
+
+model:
+  input_dim: 103
+  hidden_dims:
+    - 128
+    - 64
+  neg_slope: 0.2
+  dropout: 0.0
+
+training:
+  learning_rate: 0.001
+  epochs: 100
+  class_weight: false
+
+logging:
+  level: DEBUG
+  format: "%(levelname)s: %(message)s"
+"""
+    config_file = tmp_path / "config_unknown_section.yaml"
+    config_file.write_text(config_content)
+    return config_file
+
+
+@pytest.fixture
 def mock_preprocessing():
     """Mock Preprocessing object."""
     mock = Mock()
@@ -144,6 +217,37 @@ class TestValidateConfig:
 
         with pytest.raises(ValueError, match="Missing required key"):
             exp.validate_config()
+
+    def test_validate_config_unknown_key_in_known_section(self, config_unknown_key, caplog):
+        """Test validation logs warning for unknown key in known section."""
+        exp = Experiment.__new__(Experiment)
+        exp.config = Experiment.load_config(config_unknown_key)
+
+        with caplog.at_level("WARNING"):
+            exp.validate_config()
+
+        assert any("Unknown key 'unknown_key'" in record.message for record in caplog.records)
+
+    def test_validate_config_unknown_section(self, config_unknown_section, caplog):
+        """Test validation logs warning for unknown section."""
+        exp = Experiment.__new__(Experiment)
+        exp.config = Experiment.load_config(config_unknown_section)
+
+        with caplog.at_level("WARNING"):
+            exp.validate_config()
+
+        assert any("Unknown section 'logging'" in record.message for record in caplog.records)
+
+    def test_validate_config_no_warning_for_valid(self, valid_config_file, caplog):
+        """Test validation does not log warning for valid config."""
+        exp = Experiment.__new__(Experiment)
+        exp.config = Experiment.load_config(valid_config_file)
+
+        with caplog.at_level("WARNING"):
+            exp.validate_config()
+
+        assert not any("Unknown key" in record.message for record in caplog.records)
+        assert not any("Unknown section" in record.message for record in caplog.records)
 
 
 class TestGetPrepro:
