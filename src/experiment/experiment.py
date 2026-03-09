@@ -1,3 +1,4 @@
+from abc import abstractmethod, ABC
 from pathlib import Path
 from typing import Any, cast
 
@@ -23,7 +24,7 @@ from src.utils.logger import LoggerFactory
 logger = LoggerFactory.get_logger(name=__name__)
 
 
-class Experiment:
+class Experiment(ABC):
     def __init__(self, config_path: Path):
         self.config = self.load_config(config_path)
         self.validate_config()
@@ -67,10 +68,11 @@ class Experiment:
         prepro = self.get_prepro()
         prepro.run()
 
-        train_loader, val_loader, test_loader = prepro.generate_loaders(prop_train=self.config["data"]["prop_train"],
-                                                                        prop_valid=self.config["data"]["prop_valid"],
-                                                                        seed=self.config["experiment"]["seed"],
-                                                                        batch_size=self.config["data"]["batch_size"])
+        train_loader, val_loader, test_loader = prepro.generate_loaders(
+            prop_train=self.config["data"]["prop_train"],
+            prop_valid=self.config["data"]["prop_valid"],
+            seed=self.config["experiment"]["seed"],
+            batch_size=self.config["data"]["batch_size"])
 
         return train_loader, val_loader, test_loader
 
@@ -82,7 +84,6 @@ class Experiment:
             all_labels.append(labels)
 
         all_labels = torch.cat(all_labels)
-        logger.info(all_labels)
         class_counts = torch.bincount(all_labels.long())
         return class_counts.float()
 
@@ -172,27 +173,6 @@ class Experiment:
         writer.write(path=save_dir / "likelihoods_g1_h0.csv", content=likelihoods_g1_h0)
         writer.write(path=save_dir / "likelihoods_g1_h1.csv", content=likelihoods_g1_h1)
 
-    def run(self, save_path: Path):
-        logger.info("===== Running Experiment =====")
-        logger.info("Preprocessing data")
-        train_loader, val_loader, test_loader = self.preprocess_data()
-
-        logger.info("Training model")
-        model = self.train_model(train_loader, val_loader)
-
-        logger.info("Constructing histograms")
-        filter_correct_g0, filter_correct_g1 = self.get_filter_hist(train_loader)
-        histograms_g0 = self._get_histograms(model, train_loader, filter_correct_g0)
-        histograms_g1 = self._get_histograms(model, train_loader, filter_correct_g1)
-        if self.config["experiment"]["save_hist"]:
-            self.save_histograms(save_path, histograms_g0, histograms_g1)
-
-        logger.info("Computing likelihood")
-        filter_g0, filter_g1 = self.get_filter_likelihood(test_loader)
-        likelihoods_g0_h0 = self._get_likelihood(model, test_loader, histograms_g0, filter_g0)
-        likelihoods_g0_h1 = self._get_likelihood(model, test_loader, histograms_g1, filter_g0)
-        likelihoods_g1_h0 = self._get_likelihood(model, test_loader, histograms_g0, filter_g1)
-        likelihoods_g1_h1 = self._get_likelihood(model, test_loader, histograms_g1, filter_g1)
-        if self.config["experiment"]["save_likelihood"]:
-            self.save_likelihoods(save_path, likelihoods_g0_h0, likelihoods_g0_h1, likelihoods_g1_h0, likelihoods_g1_h1)
-        logger.info("End of the experiment")
+    @abstractmethod
+    def run(self, save_dir: Path):
+        pass
