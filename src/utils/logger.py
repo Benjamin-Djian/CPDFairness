@@ -36,5 +36,11 @@ class LoggerFactory:
         LoggerFactory._initialized = True
 
     @staticmethod
+    def reset() -> None:
+        LoggerFactory._initialized = False
+        root_logger = logging.getLogger()
+        root_logger.handlers.clear()
+
+    @staticmethod
     def get_logger(name: str) -> logging.Logger:
         return logging.getLogger(name)
