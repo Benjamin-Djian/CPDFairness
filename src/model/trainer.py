@@ -1,8 +1,12 @@
+from pathlib import Path
+
 import torch
+from matplotlib import pyplot as plt
 from torch import nn
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 
+import src.utils.env as e
 from src.model.binary_classificator import BinaryClassificator
 from src.utils.logger import LoggerFactory
 
@@ -11,16 +15,42 @@ logger = LoggerFactory.get_logger(name=__name__)
 
 class TrainHistory:
     def __init__(self, train_loss: list[float], train_acc: list[float], val_loss: list[float], val_acc: list[float]):
+        self.nbr_epochs = len(train_loss)
         self.train_loss = train_loss
         self.train_acc = train_acc
         self.val_loss = val_loss
         self.val_acc = val_acc
+        self.validate_history()
+
+    def validate_history(self):
+        if self.train_loss == [] or self.train_acc == [] or self.val_loss == [] or self.val_acc == []:
+            raise ValueError("TrainHistory: cannot consider empty train history")
+        if len(self.train_loss) != len(self.train_acc):
+            raise ValueError("TrainHistory: train loss and accuracy does not have the same size")
+        if len(self.val_loss) != len(self.val_acc):
+            raise ValueError("TrainHistory: validation loss and validation does not have the same size")
 
     def __repr__(self):
         return (f"Train loss : {self.train_loss}\n "
                 f"Train acc : {self.train_acc}\n"
                 f"Validation loss : {self.val_loss}\n "
                 f"Validation acc : {self.val_acc}\n")
+
+    def save_fig(self, save_path: Path):
+        fig, (ax1, ax2) = plt.subplots(2, sharex=True, figsize=e.DEFAULT_FIGURE_SIZE)
+        ax1.plot([x for x in range(1, self.nbr_epochs + 1)], self.train_loss, label="Training Loss")
+        ax1.plot([x for x in range(1, self.nbr_epochs + 1)], self.val_loss, label="Validation Loss")
+        ax1.set_title("Training Loss")
+        ax1.legend()
+        ax1.set_xlabel('Number of epochs')
+        ax2.plot([x for x in range(1, self.nbr_epochs + 1)], self.train_acc, label="Training Accuracy")
+        ax2.plot([x for x in range(1, self.nbr_epochs + 1)], self.val_acc, label="Validation Accuracy")
+        ax2.set_title("Accuracy")
+        ax2.legend()
+        ax2.set_xlabel('Number of epochs')
+
+        save_path_fig = Path(save_path).with_suffix('.pdf')
+        fig.savefig(save_path_fig, dpi=e.DEFAULT_DPI, format='pdf')
 
 
 class Trainer:
