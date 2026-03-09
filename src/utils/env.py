@@ -75,7 +75,6 @@ LSP_PREC = int(abs(math.log10(LOW_SMOOTHED_PROB)))
 DISPLAY_PREC = getenv_int("DISPLAY_PREC")
 
 # ----- PATHS -----
-PROJECT_PATH = Path(getenv_str("PROJECT_PATH"))
 ADULT_DATA_PATH = Path(getenv_str("ADULT_DATA_PATH"))
 GERMAN_DATA_PATH = Path(getenv_str("GERMAN_DATA_PATH"))
 LAW_DATA_PATH = Path(getenv_str("LAW_DATA_PATH"))
