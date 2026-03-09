@@ -11,9 +11,6 @@ logger = LoggerFactory.get_logger(name=__name__)
 
 
 class PreprocessingOperation(ABC):
-    def __init__(self):
-        pass
-
     @abstractmethod
     def run(self, df: pd.DataFrame, target_name: str, sens_attr_name: str) -> pd.DataFrame:
         pass
