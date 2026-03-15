@@ -1,7 +1,8 @@
 import argparse
 from pathlib import Path
 
-from src.experiment.base_experiment import BaseExperiment, PlotExperiment
+from src.experiment.base_experiment import BaseExperiment
+from src.experiment.plot_experiment import PlotExperiment
 from src.utils.logger import LoggerFactory
 
 

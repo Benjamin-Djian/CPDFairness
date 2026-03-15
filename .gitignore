@@ -6,3 +6,4 @@ experiments/*
 !experiments/exp_*/
 experiments/exp_*/*
 !experiments/exp_*/config.yaml
+**/.DS_Store

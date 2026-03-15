@@ -2,6 +2,7 @@ experiment:
   seed: 42
   save_hist: true
   save_likelihood: true
+  save_model: true
 
 data:
   name: adult

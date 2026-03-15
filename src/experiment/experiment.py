@@ -17,7 +17,8 @@ from src.model.trainer import Trainer
 from src.preprocessing.dataset import IndexDataset
 from src.preprocessing.preprocessing import AdultPreprocessing, GermanCreditPreprocessing, LawSchoolPreprocessing, \
     Preprocessing
-from src.utils.env import REQUIRED_CONFIG_KEYS
+from src.utils.env import REQUIRED_CONFIG_KEYS, HIST_SAVE_PATH_0, HIST_SAVE_PATH_1, LH_G0_H0, LH_G0_H1, LH_G1_H0, \
+    LH_G1_H1
 from src.utils.file_writer import LikelihoodWriter, HistWriter
 from src.utils.logger import LoggerFactory
 
@@ -87,12 +88,15 @@ class Experiment(ABC):
         class_counts = torch.bincount(all_labels.long())
         return class_counts.float()
 
+    def define_model(self) -> BinaryClassificator:
+        return BinaryClassificator(input_dim=self.config["model"]["input_dim"],
+                                   hidden_dims=self.config["model"]["hidden_dims"],
+                                   negative_slope=self.config["model"]["neg_slope"],
+                                   dropout=self.config["model"]["dropout"],
+                                   seed=self.config["experiment"]["seed"])
+
     def train_model(self, train_loader: DataLoader, val_loader: DataLoader) -> BinaryClassificator:
-        model = BinaryClassificator(input_dim=self.config["model"]["input_dim"],
-                                    hidden_dims=self.config["model"]["hidden_dims"],
-                                    negative_slope=self.config["model"]["neg_slope"],
-                                    dropout=self.config["model"]["dropout"],
-                                    seed=self.config["experiment"]["seed"])
+        model = self.define_model()
 
         c_weight = None
         if self.config["training"]["class_weight"]:
@@ -136,8 +140,8 @@ class Experiment(ABC):
     @staticmethod
     def save_histograms(save_dir: Path, hist_g0: list[Histogram], hist_g1: list[Histogram]) -> None:
         writer = HistWriter()
-        writer.write(path=save_dir / "histogram_g0.csv", content=hist_g0)
-        writer.write(path=save_dir / "histogram_g1.csv", content=hist_g1)
+        writer.write(path=save_dir / HIST_SAVE_PATH_0, content=hist_g0)
+        writer.write(path=save_dir / HIST_SAVE_PATH_1, content=hist_g1)
 
     def get_filter_likelihood(self, test_loader: DataLoader) -> tuple[list[FeatureFilter], list[FeatureFilter]]:
         test_dataset = cast(IndexDataset, test_loader.dataset)
@@ -168,10 +172,10 @@ class Experiment(ABC):
                          likelihoods_g1_h0: list[LikelihoodScore],
                          likelihoods_g1_h1: list[LikelihoodScore]) -> None:
         writer = LikelihoodWriter()
-        writer.write(path=save_dir / "likelihoods_g0_h0.csv", content=likelihoods_g0_h0)
-        writer.write(path=save_dir / "likelihoods_g0_h1.csv", content=likelihoods_g0_h1)
-        writer.write(path=save_dir / "likelihoods_g1_h0.csv", content=likelihoods_g1_h0)
-        writer.write(path=save_dir / "likelihoods_g1_h1.csv", content=likelihoods_g1_h1)
+        writer.write(path=save_dir / LH_G0_H0, content=likelihoods_g0_h0)
+        writer.write(path=save_dir / LH_G0_H1, content=likelihoods_g0_h1)
+        writer.write(path=save_dir / LH_G1_H0, content=likelihoods_g1_h0)
+        writer.write(path=save_dir / LH_G1_H1, content=likelihoods_g1_h1)
 
     @abstractmethod
     def run(self, save_dir: Path):

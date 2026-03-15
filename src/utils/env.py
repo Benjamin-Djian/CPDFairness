@@ -60,7 +60,7 @@ def getenv_str(key: str) -> str:
 # ----- CONFIG -----
 
 REQUIRED_CONFIG_KEYS = {
-    "experiment": ["seed", "save_hist", "save_likelihood"],
+    "experiment": ["seed", "save_hist", "save_likelihood", "save_model"],
     "data": ["name", "prop_train", "prop_valid", "batch_size", "sens_attr"],
     "model": ["input_dim", "hidden_dims", "neg_slope", "dropout"],
     "training": ["epochs", "learning_rate", "class_weight"],
@@ -78,6 +78,15 @@ DISPLAY_PREC = getenv_int("DISPLAY_PREC")
 ADULT_DATA_PATH = Path(getenv_str("ADULT_DATA_PATH"))
 GERMAN_DATA_PATH = Path(getenv_str("GERMAN_DATA_PATH"))
 LAW_DATA_PATH = Path(getenv_str("LAW_DATA_PATH"))
+
+# ----- SAVE PATHS -----
+MODEL_SAVE_PATH = Path(getenv_str("MODEL_SAVE_PATH"))
+HIST_SAVE_PATH_0 = Path(getenv_str("HIST_SAVE_PATH_0"))
+HIST_SAVE_PATH_1 = Path(getenv_str("HIST_SAVE_PATH_1"))
+LH_G0_H0 = Path(getenv_str("LH_G0_H0"))
+LH_G0_H1 = Path(getenv_str("LH_G0_H1"))
+LH_G1_H0 = Path(getenv_str("LH_G1_H0"))
+LH_G1_H1 = Path(getenv_str("LH_G1_H1"))
 
 # ----- DATA -----
 ADULT_TARGET = getenv_str("ADULT_TARGET")
