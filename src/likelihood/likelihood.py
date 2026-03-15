@@ -8,10 +8,6 @@ from src.utils.logger import LoggerFactory
 
 logger = LoggerFactory.get_logger(name=__name__)
 
-nk_type = tuple[int, int]
-table_type = dict[nk_type, float]
-prob_table_type = dict[nk_type, dict[int, float]]
-
 
 class LikelihoodScore:
     def __init__(self, input_id: int, score: float):

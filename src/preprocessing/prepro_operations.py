@@ -18,7 +18,6 @@ class PreprocessingOperation(ABC):
 
 class MakeCategorical(PreprocessingOperation):
     def __init__(self, lb: int, ub: int):
-        super().__init__()
         self.lb = lb
         self.ub = ub
 

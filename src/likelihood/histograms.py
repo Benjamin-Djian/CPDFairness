@@ -23,7 +23,7 @@ class Histogram(ABC):
             raise ValueError("Frequency can not be zero")
         self.bins = bins
         self.freq = freq
-        self.lower_bound = min(bins)
+        self.lower_bound = float(np.min(bins))
         self.step = bins[1] - bins[0]
 
     @abstractmethod
@@ -90,7 +90,7 @@ class HistogramConstructor:
                 f'Hist file would be incorrect')
 
     def construct_single_bins(self, activations: torch.Tensor) -> UniBinHistogram:
-        min_act = min(activations)
+        min_act = torch.min(activations).item()
         return UniBinHistogram(node_id=self.node_id,
                                bins=np.array([min_act, min_act]),
                                freq=np.array([len(activations)]))
