@@ -13,7 +13,9 @@ def base_config():
         "experiment": {
             "seed": 42,
             "save_hist": False,
-            "save_likelihood": True
+            "save_likelihood": True,
+            "save_model": False,
+            "save_data": False
         },
         "data": {
             "name": "adult",
@@ -170,8 +172,8 @@ class TestValidateConfig:
         assert not any("Unknown section" in record.message for record in caplog.records)
 
 
-class TestGetPrepro:
-    """Tests for get_prepro method."""
+class TestGetPreparator:
+    """Tests for get_preparator method."""
 
     @pytest.mark.parametrize(
         "dataset, sens_attr",
@@ -181,10 +183,10 @@ class TestGetPrepro:
             ("law", "male"),
         ]
     )
-    @patch("src.experiment.experiment.AdultPreprocessing")
-    @patch("src.experiment.experiment.GermanCreditPreprocessing")
-    @patch("src.experiment.experiment.LawSchoolPreprocessing")
-    def test_get_prepro_all_datasets(
+    @patch("src.experiment.experiment.AdultDataPreparator")
+    @patch("src.experiment.experiment.GermanDataPreparator")
+    @patch("src.experiment.experiment.LawDataPreparator")
+    def test_get_preparator_all_datasets(
             self,
             mock_law,
             mock_german,
@@ -192,7 +194,7 @@ class TestGetPrepro:
             dataset,
             sens_attr
     ):
-        """Test get_prepro returns correct preprocessing for each dataset."""
+        """Test get_preparator returns correct data preparator for each dataset."""
 
         exp = DummyExperiment.__new__(DummyExperiment)
         exp.config = {
@@ -202,28 +204,28 @@ class TestGetPrepro:
             "experiment": {}
         }
 
-        prepro_obj = exp.get_prepro()
+        preparator = exp.get_preparator()
 
         if dataset == "adult":
             mock_adult.assert_called_once_with(sens_attr)
-            assert prepro_obj == mock_adult.return_value
+            assert preparator == mock_adult.return_value
 
         elif dataset == "german":
             mock_german.assert_called_once_with(sens_attr)
-            assert prepro_obj == mock_german.return_value
+            assert preparator == mock_german.return_value
 
         elif dataset == "law":
             mock_law.assert_called_once_with(sens_attr)
-            assert prepro_obj == mock_law.return_value
+            assert preparator == mock_law.return_value
 
-    def test_get_prepro_unknown_dataset(self, base_config):
-        """Test get_prepro raises error for unknown dataset."""
+    def test_get_preparator_unknown_dataset(self, base_config):
+        """Test get_preparator raises error for unknown dataset."""
         exp = DummyExperiment.__new__(DummyExperiment)
         exp.config = base_config
         exp.config["data"]["name"] = "unknown"
 
         with pytest.raises(ValueError, match="Unknown dataset name"):
-            exp.get_prepro()
+            exp.get_preparator()
 
 
 class TestSaveLikelihoods:

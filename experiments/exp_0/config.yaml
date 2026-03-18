@@ -3,7 +3,6 @@ experiment:
   save_hist: true
   save_likelihood: true
   save_model: true
-  save_data: true
 
 data:
   name: adult
@@ -15,9 +14,8 @@ data:
 model:
   input_dim: 103
   hidden_dims:
-    - 256
-    - 256
-    - 256
+    - 128
+    - 128
   neg_slope: 0.01
   dropout: 0.5
 

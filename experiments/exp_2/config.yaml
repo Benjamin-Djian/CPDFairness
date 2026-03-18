@@ -3,6 +3,7 @@ experiment:
   save_hist: true
   save_likelihood: true
   save_model: true
+  save_data: true
 
 data:
   name: adult

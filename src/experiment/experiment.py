@@ -8,15 +8,15 @@ from torch.nn import NLLLoss
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 
+from src.data.dataset import IndexDataset
 from src.likelihood.activation_extractor import ActivationExtractor, ActivationFilter, ClassificationFilter, \
     FeatureFilter, PredictionFilter
 from src.likelihood.histograms import HistogramConstructor, Histogram
 from src.likelihood.likelihood import LikelihoodCalculator, LikelihoodScore
 from src.model.binary_classificator import BinaryClassificator
 from src.model.trainer import Trainer
-from src.preprocessing.dataset import IndexDataset
-from src.preprocessing.preprocessing import AdultPreprocessing, GermanCreditPreprocessing, LawSchoolPreprocessing, \
-    Preprocessing
+from src.preprocessing.data_preparator import DataPreparator, AdultDataPreparator, GermanDataPreparator, \
+    LawDataPreparator
 from src.utils.env import REQUIRED_CONFIG_KEYS, HIST_SAVE_PATH_0, HIST_SAVE_PATH_1, LH_G0_H0, LH_G0_H1, LH_G1_H0, \
     LH_G1_H1
 from src.utils.file_writer import LikelihoodWriter, HistWriter
@@ -54,28 +54,16 @@ class Experiment(ABC):
                 logger.warning(
                     f"Unknown section '{section}' this section is not required and will be ignored")
 
-    def get_prepro(self) -> Preprocessing:
+    def get_preparator(self) -> DataPreparator:
         if self.config["data"]["name"] == "adult":
-            prepro = AdultPreprocessing(self.config["data"]["sens_attr"])
+            preparator = AdultDataPreparator(self.config["data"]["sens_attr"])
         elif self.config["data"]["name"] == "german":
-            prepro = GermanCreditPreprocessing(self.config["data"]["sens_attr"])
+            preparator = GermanDataPreparator(self.config["data"]["sens_attr"])
         elif self.config["data"]["name"] == "law":
-            prepro = LawSchoolPreprocessing(self.config["data"]["sens_attr"])
+            preparator = LawDataPreparator(self.config["data"]["sens_attr"])
         else:
             raise ValueError(f"Unknown dataset name : {self.config["data"]["name"]}")
-        return prepro
-
-    def preprocess_data(self) -> tuple[DataLoader, DataLoader, DataLoader]:
-        prepro = self.get_prepro()
-        prepro.run()
-
-        train_loader, val_loader, test_loader = prepro.generate_loaders(
-            prop_train=self.config["data"]["prop_train"],
-            prop_valid=self.config["data"]["prop_valid"],
-            seed=self.config["experiment"]["seed"],
-            batch_size=self.config["data"]["batch_size"])
-
-        return train_loader, val_loader, test_loader
+        return preparator
 
     @staticmethod
     def compute_binary_class_weights(loader: DataLoader) -> torch.Tensor:
@@ -116,11 +104,11 @@ class Experiment(ABC):
     def get_filter_hist(train_loader: DataLoader) -> tuple[list[ActivationFilter], list[ActivationFilter]]:
         train_dataset = cast(IndexDataset, train_loader.dataset)  # Casting to avoid type checks
         filters_correct_group_0 = [ClassificationFilter(keep_correct=True),
-                                   PredictionFilter(column_name=train_dataset.target_column,
+                                   PredictionFilter(column_name=train_dataset.target_name,
                                                     value=0,
                                                     dataset=train_dataset)]
         filters_correct_group_1 = [ClassificationFilter(keep_correct=True),
-                                   PredictionFilter(column_name=train_dataset.target_column,
+                                   PredictionFilter(column_name=train_dataset.target_name,
                                                     value=1,
                                                     dataset=train_dataset)]
         return filters_correct_group_0, filters_correct_group_1

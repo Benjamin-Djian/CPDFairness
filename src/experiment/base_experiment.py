@@ -14,7 +14,14 @@ class BaseExperiment(Experiment):
     def run(self, save_dir: Path):
         logger.info("===== Running Experiment =====")
         logger.info("Preprocessing data")
-        train_loader, val_loader, test_loader = self.preprocess_data()
+        preparator = self.get_preparator()
+        save_data_dir = save_dir if self.config["experiment"]["save_data"] else None
+
+        train_loader, val_loader, test_loader = preparator.run(prop_train=self.config["data"]["prop_train"],
+                                                               prop_valid=self.config["data"]["prop_valid"],
+                                                               batch_size=self.config["data"]["batch_size"],
+                                                               seed=self.config["experiment"]["seed"],
+                                                               save_dir=save_data_dir)
 
         logger.info("Training model")
         model = self.train_model(train_loader, val_loader)

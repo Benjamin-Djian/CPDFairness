@@ -2,6 +2,7 @@ import pandas as pd
 import pytest
 import torch
 
+from src.data.dataset import IndexDataset
 from src.likelihood.activation_extractor import (
     ClassificationFilter,
     FeatureFilter,
@@ -10,7 +11,6 @@ from src.likelihood.activation_extractor import (
     ActivationExtractor,
 )
 from src.model.binary_classificator import BinaryClassificator
-from src.preprocessing.dataset import IndexDataset
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ def sample_dataset():
         "target": [0, 1, 0, 1],
         "sens_attr": [0, 0, 1, 1]
     })
-    return IndexDataset(df, sens_attr_column="sens_attr", target_column="target")
+    return IndexDataset(df, sens_attr_name="sens_attr", target_name="target")
 
 
 class TestClassificationFilter:

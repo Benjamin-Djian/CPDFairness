@@ -1,22 +1,37 @@
+from pathlib import Path
+
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
 
 
 class IndexDataset(Dataset):
-    def __init__(self, df: pd.DataFrame, sens_attr_column: str, target_column: str):
+    def __init__(self, df: pd.DataFrame, sens_attr_name: str, target_name: str):
         self.df = df
-        self.check_binary_feature(sens_attr_column)
-        self.check_binary_feature(target_column)
-        self.sens_attr_column = sens_attr_column
-        self.target_column = target_column
+        self.check_binary_feature(sens_attr_name)
+        self.check_binary_feature(target_name)
+        self.sens_attr_name = sens_attr_name
+        self.target_name = target_name
 
-        self.features = df.drop(columns=[target_column]).values
-        self.target = df[target_column].values
+        self.features = df.drop(columns=[target_name]).values
+        self.target = df[target_name].values
 
     @property
     def feature_columns(self):
-        return list(self.df.drop(columns=[self.target_column]).columns)
+        return list(self.df.drop(columns=[self.target_name]).columns)
+
+    @property
+    def index(self):
+        return self.df.index
+
+    def copy(self):
+        return IndexDataset(df=self.df.copy(), sens_attr_name=self.sens_attr_name, target_name=self.target_name)
+
+    def create_from_df(self, df: pd.DataFrame):
+        return IndexDataset(df=df, sens_attr_name=self.sens_attr_name, target_name=self.target_name)
+
+    def to_csv(self, save_path: Path):
+        self.df.to_csv(save_path, index=True, index_label='inputId')
 
     def check_binary_feature(self, col_name: str):
         if col_name not in self.df.columns:

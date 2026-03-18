@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 import torch
 from torch.utils.data import DataLoader
 
+from src.data.dataset import IndexDataset
 from src.model.binary_classificator import BinaryClassificator
-from src.preprocessing.dataset import IndexDataset
 from src.utils.logger import LoggerFactory
 
 logger = LoggerFactory.get_logger(name=__name__)
