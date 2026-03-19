@@ -1,5 +1,7 @@
 import pytest
 import torch
+from torch import nn
+
 from src.model.binary_classificator import BinaryClassificator
 
 
@@ -11,6 +13,7 @@ class TestClassificator:
         model = BinaryClassificator(
             input_dim=10,
             hidden_dims=[8, 6, 4],
+            activation_fctn=nn.ReLU(),
             seed=42
         )
 
@@ -19,13 +22,14 @@ class TestClassificator:
     def test_init_no_hidden_layers_raises(self):
         """Test initialization raises error with no hidden layers."""
         with pytest.raises(ValueError, match="at least one hidden layer"):
-            BinaryClassificator(input_dim=10, hidden_dims=[])
+            BinaryClassificator(input_dim=10, hidden_dims=[], activation_fctn=nn.ReLU())
 
     def test_forward_returns_tuple(self):
         """Test forward returns tuple of logits and hidden activations."""
         model = BinaryClassificator(
             input_dim=10,
             hidden_dims=[5],
+            activation_fctn=nn.ReLU(),
             seed=42
         )
 
@@ -40,6 +44,7 @@ class TestClassificator:
         model = BinaryClassificator(
             input_dim=10,
             hidden_dims=[5],
+            activation_fctn=nn.ReLU(),
             seed=42
         )
 
@@ -50,7 +55,7 @@ class TestClassificator:
 
     def test_model_has_seq_attribute(self):
         """Test model has seq attribute for sequential layers."""
-        model = BinaryClassificator(input_dim=10, hidden_dims=[5], seed=42)
+        model = BinaryClassificator(input_dim=10, hidden_dims=[5], activation_fctn=nn.ReLU(), seed=42)
 
         assert hasattr(model, 'seq')
         assert hasattr(model, 'output')

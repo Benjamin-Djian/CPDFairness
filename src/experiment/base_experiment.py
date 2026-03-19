@@ -14,25 +14,23 @@ class BaseExperiment(Experiment):
     def run(self, save_dir: Path):
         logger.info("===== Running Experiment =====")
         logger.info("Preprocessing data")
-        preparator = self.get_preparator()
-        save_data_dir = save_dir if self.config["experiment"]["save_data"] else None
-
-        train_loader, val_loader, test_loader = preparator.run(prop_train=self.config["data"]["prop_train"],
-                                                               prop_valid=self.config["data"]["prop_valid"],
-                                                               batch_size=self.config["data"]["batch_size"],
-                                                               seed=self.config["experiment"]["seed"],
-                                                               save_dir=save_data_dir)
+        save_data_dir = save_dir if self.config.experiment.save.dataset else None
+        train_loader, val_loader, test_loader = self.data_preparator.run(prop_train=self.config.data.train_split,
+                                                                         prop_valid=self.config.data.valid_split,
+                                                                         batch_size=self.config.data.batch_size,
+                                                                         seed=self.config.experiment.seed,
+                                                                         save_dir=save_data_dir)
 
         logger.info("Training model")
         model = self.train_model(train_loader, val_loader)
-        if self.config["experiment"]["save_model"]:
+        if self.config.experiment.save.model:
             torch.save(model.state_dict(), save_dir / MODEL_SAVE_PATH)
 
         logger.info("Constructing histograms")
         filter_correct_g0, filter_correct_g1 = self.get_filter_hist(train_loader)
         histograms_g0 = self._get_histograms(model, train_loader, filter_correct_g0)
         histograms_g1 = self._get_histograms(model, train_loader, filter_correct_g1)
-        if self.config["experiment"]["save_hist"]:
+        if self.config.experiment.save.histogram:
             self.save_histograms(save_dir, histograms_g0, histograms_g1)
 
         logger.info("Computing likelihood")
@@ -41,6 +39,6 @@ class BaseExperiment(Experiment):
         likelihoods_g0_h1 = self._get_likelihood(model, test_loader, histograms_g1, filter_g0)
         likelihoods_g1_h0 = self._get_likelihood(model, test_loader, histograms_g0, filter_g1)
         likelihoods_g1_h1 = self._get_likelihood(model, test_loader, histograms_g1, filter_g1)
-        if self.config["experiment"]["save_likelihood"]:
+        if self.config.experiment.save.likelihood:
             self.save_likelihoods(save_dir, likelihoods_g0_h0, likelihoods_g0_h1, likelihoods_g1_h0, likelihoods_g1_h1)
         logger.info("End of the experiment")

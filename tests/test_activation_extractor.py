@@ -1,6 +1,7 @@
 import pandas as pd
 import pytest
 import torch
+from torch import nn
 
 from src.data.dataset import IndexDataset
 from src.likelihood.activation_extractor import (
@@ -201,7 +202,7 @@ class TestActivationExtractor:
 
     def test_init(self):
         """Test ActivationExtractor initialization."""
-        model = BinaryClassificator(input_dim=10, hidden_dims=[5], seed=42)
+        model = BinaryClassificator(input_dim=10, hidden_dims=[5], activation_fctn=nn.ReLU(), seed=42)
         extractor = ActivationExtractor(model)
 
         assert extractor.classificator is model

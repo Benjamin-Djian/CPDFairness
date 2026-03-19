@@ -9,7 +9,7 @@ logger = LoggerFactory.get_logger(name=__name__)
 class BinaryClassificator(nn.Module):
     def __init__(self, input_dim: int,
                  hidden_dims: list[int],
-                 negative_slope=0.2,
+                 activation_fctn: nn.Module,
                  dropout: float = 0.0,
                  seed=42):
 
@@ -21,7 +21,7 @@ class BinaryClassificator(nn.Module):
             raise ValueError("Model architecture must include at least one hidden layer")
         for hidden_dim in hidden_dims:
             layers.append(nn.Linear(prev_dim, hidden_dim))
-            layers.append(nn.LeakyReLU(negative_slope=negative_slope))
+            layers.append(activation_fctn)
 
             if dropout > 0:
                 layers.append(nn.Dropout(dropout))

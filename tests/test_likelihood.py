@@ -1,10 +1,11 @@
-from src.model.binary_classificator import BinaryClassificator
+from torch import nn
 
 from src.likelihood.activation_extractor import ActivationExtractor
 from src.likelihood.likelihood import (
     LikelihoodScore,
     LikelihoodCalculator,
 )
+from src.model.binary_classificator import BinaryClassificator
 
 
 class TestLikelihoodScore:
@@ -23,7 +24,7 @@ class TestLikelihoodCalculator:
 
     def test_init(self):
         """Test LikelihoodCalculator initialization."""
-        model = BinaryClassificator(input_dim=10, hidden_dims=[5], seed=42)
+        model = BinaryClassificator(input_dim=10, hidden_dims=[5], activation_fctn=nn.ReLU(), seed=42)
         extractor = ActivationExtractor(model)
 
         calc = LikelihoodCalculator(extractor)

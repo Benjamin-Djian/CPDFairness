@@ -61,21 +61,27 @@ class DataPreparator:
 
 
 class AdultDataPreparator(DataPreparator):
-    def __init__(self, sens_attr_name):
+    def __init__(self, sens_attr_name: str, additional_steps: list[PreprocessingOperation] | None = None):
+        if not additional_steps:
+            additional_steps = []
         data_reader = AdultDataReader(sens_attr_name)
         operations = [MakeCategorical(lb=3, ub=5), Scale(), ToFloat(), TargetAtTheEnd()]
-        super().__init__(data_reader, ops=operations)
+        super().__init__(data_reader, ops=operations + additional_steps)
 
 
 class GermanDataPreparator(DataPreparator):
-    def __init__(self, sens_attr_name):
+    def __init__(self, sens_attr_name: str, additional_steps: list[PreprocessingOperation] | None = None):
+        if not additional_steps:
+            additional_steps = []
         data_reader = GermanDataReader(sens_attr_name)
         operations = [MakeCategorical(lb=3, ub=5), Scale(), ToFloat(), TargetAtTheEnd()]
-        super().__init__(data_reader, ops=operations)
+        super().__init__(data_reader, ops=operations + additional_steps)
 
 
 class LawDataPreparator(DataPreparator):
-    def __init__(self, sens_attr_name):
+    def __init__(self, sens_attr_name: str, additional_steps: list[PreprocessingOperation] | None = None):
+        if not additional_steps:
+            additional_steps = []
         data_reader = LawDataReader(sens_attr_name)
         operations = [MakeCategorical(lb=3, ub=5), Scale(), ToFloat(), TargetAtTheEnd()]
-        super().__init__(data_reader, ops=operations)
+        super().__init__(data_reader, ops=operations + additional_steps)

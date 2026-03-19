@@ -30,7 +30,7 @@ class TestTrainer:
 
     def test_init(self):
         """Test Trainer initialization."""
-        model = BinaryClassificator(input_dim=10, hidden_dims=[5], seed=42)
+        model = BinaryClassificator(input_dim=10, hidden_dims=[5], activation_fctn=nn.ReLU(), seed=42)
         trainer = Trainer(model=model, loss_fctn=NLLLoss(), optimizer=Adam(model.parameters()))
 
         assert trainer.model is model

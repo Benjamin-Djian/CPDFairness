@@ -2,7 +2,8 @@
 
 ## Description
 
-The goal of this projet is to use Computational Profile Distance (CPD) in the context of fairness of deep neural
+The goal of this projet is to use [Computational Profile Distance (CPD)](https://arxiv.org/abs/2107.13491) in the
+context of fairness of deep neural
 networks (DNN).
 
 The project is initially build to measure difference in CPD distribution between two demographic groups in the context
@@ -32,8 +33,9 @@ Soon available
 
 # Roadmap
 
-- [ ] Personalize preprocessing in config file
+- [x] Better configuration readability and validation
 - [ ] CR and DIR
+- [ ] Add docstring
 - [ ] Post experiment
 - [ ] Update main.py
 
