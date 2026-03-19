@@ -11,6 +11,8 @@ from src.likelihood.likelihood import LikelihoodScore
 
 
 class Visualisation(ABC):
+    """Abstract base class for matplotlib-based visualizations."""
+
     def __init__(self, title: str | None, x_label: str | None, y_label: str | None):
         self.figure: Figure
         self.ax: Axes
@@ -69,6 +71,8 @@ class DualAxisVisualisation(Visualisation, ABC):
 
 
 class PlotCPDDistr(Visualisation):
+    """Plots CPD distribution as overlapping histograms for two series."""
+
     def __init__(self,
                  serie_1: list[LikelihoodScore],
                  serie_2: list[LikelihoodScore],
@@ -97,6 +101,8 @@ class PlotCPDDistr(Visualisation):
 
 
 class PlotCPDFractionPop(Visualisation):
+    """Plots fraction of population versus normalized CPD for a single series."""
+
     def __init__(self,
                  serie_1: list[LikelihoodScore],
                  serie_2: list[LikelihoodScore],
@@ -135,6 +141,8 @@ class PlotCPDFractionPop(Visualisation):
 
 
 class DualCPDFractionPop(DualAxisVisualisation):
+    """Plots dual-axis CPD fraction population curves for comparing groups."""
+
     def __init__(
             self,
             serie_plain_left: list[LikelihoodScore],

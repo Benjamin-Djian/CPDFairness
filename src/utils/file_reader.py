@@ -17,6 +17,8 @@ logger = LoggerFactory.get_logger(name=__name__)
 
 
 class FileReader(ABC):
+    """Abstract base class for reading CSV files with typed headers."""
+
     def __init__(self, header: OrderedDict[str, type], sep: str = ","):
         self.header = header
         self.sep = sep
@@ -57,6 +59,8 @@ class FileReader(ABC):
 
 
 class ContribsReader(FileReader):
+    """Reads neural network activation files and reconstructs ActivationGetter objects."""
+
     def __init__(self, sep: str = ','):
         super().__init__(header=e.CONTRIBS_HEADER, sep=sep)
 
@@ -80,6 +84,8 @@ class ContribsReader(FileReader):
 
 
 class HistReader(FileReader):
+    """Reads histogram CSV files and reconstructs Histogram objects."""
+
     def __init__(self, sep: str = ','):
         super().__init__(header=e.HIST_HEADER, sep=sep)
 
@@ -118,6 +124,8 @@ class HistReader(FileReader):
 
 
 class LikelihoodReader(FileReader):
+    """Reads likelihood score CSV files and reconstructs LikelihoodScore objects."""
+
     def __init__(self, sep: str = ','):
         super().__init__(header=e.LH_HEADER, sep=sep)
 

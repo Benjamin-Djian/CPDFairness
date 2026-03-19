@@ -6,6 +6,8 @@ from torch.utils.data import Dataset
 
 
 class IndexDataset(Dataset):
+    """PyTorch Dataset wrapper around a DataFrame with target and a sensitive attribute."""
+
     def __init__(self, df: pd.DataFrame, sens_attr_name: str, target_name: str):
         self.df = df
         self.check_binary_feature(sens_attr_name)

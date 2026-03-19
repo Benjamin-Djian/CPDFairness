@@ -10,6 +10,7 @@ logger = LoggerFactory.get_logger(name=__name__)
 
 
 class BaseExperiment(Experiment):
+    """Full experiment: preprocess, train model, build histograms, compute likelihoods."""
 
     def run(self, save_dir: Path):
         logger.info("===== Running Experiment =====")

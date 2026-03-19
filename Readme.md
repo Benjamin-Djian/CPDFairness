@@ -35,7 +35,8 @@ Soon available
 
 - [x] Better configuration readability and validation
 - [ ] CR and DIR
-- [ ] Add docstring
+- [ ] Update tests (measure coverage)
+- [x] Add docstring
 - [ ] Post experiment
 - [ ] Update main.py
 

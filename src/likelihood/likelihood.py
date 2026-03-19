@@ -10,6 +10,8 @@ logger = LoggerFactory.get_logger(name=__name__)
 
 
 class LikelihoodScore:
+    """Holds likelihood score for a single input sample."""
+
     def __init__(self, input_id: int, score: float):
         self.input_id = input_id
         self.score = score
@@ -19,6 +21,8 @@ class LikelihoodScore:
 
 
 class LikelihoodCalculator:
+    """Computes likelihood scores using histograms and activation extractor."""
+
     def __init__(self, extractor: ActivationExtractor):
         self.extractor = extractor
 

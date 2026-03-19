@@ -7,6 +7,8 @@ logger = LoggerFactory.get_logger(name=__name__)
 
 
 class BinaryClassificator(nn.Module):
+    """Binary classifier neural network with LogSoftmax output."""
+
     def __init__(self, input_dim: int,
                  hidden_dims: list[int],
                  activation_fctn: nn.Module,

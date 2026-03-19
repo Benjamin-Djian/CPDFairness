@@ -7,6 +7,7 @@ from src.utils.env import ADULT_DATA_PATH, LAW_DATA_PATH, GERMAN_DATA_PATH, ADUL
 
 
 class DataReader(ABC):
+    """Base class for reading CSV datasets with target and sensitive attribute columns."""
     def __init__(self, data_path: Path, index_column: str, target_name: str, sens_attr_name: str):
         self.data_path = data_path
         self.index_column = index_column
@@ -23,6 +24,8 @@ class DataReader(ABC):
 
 
 class AdultDataReader(DataReader):
+    """DataReader for Adult dataset with income prediction task."""
+
     def __init__(self, sens_attr_name: str):
         super().__init__(data_path=ADULT_DATA_PATH,
                          index_column='inputId',
@@ -31,6 +34,8 @@ class AdultDataReader(DataReader):
 
 
 class GermanDataReader(DataReader):
+    """DataReader for German Credit dataset with credit risk prediction task."""
+
     def __init__(self, sens_attr_name: str):
         super().__init__(data_path=GERMAN_DATA_PATH,
                          index_column='inputId',
@@ -39,6 +44,8 @@ class GermanDataReader(DataReader):
 
 
 class LawDataReader(DataReader):
+    """DataReader for Law School dataset with bar passage prediction task."""
+
     def __init__(self, sens_attr_name: str):
         super().__init__(data_path=LAW_DATA_PATH,
                          index_column='inputId',

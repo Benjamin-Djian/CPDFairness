@@ -15,6 +15,8 @@ logger = LoggerFactory.get_logger(name=__name__)
 
 
 class DataPreparator:
+    """Prepares datasets by applying preprocessing pipeline and creating dataloaders."""
+
     def __init__(self, data_reader: DataReader, ops: list[PreprocessingOperation]):
         self.data_reader = data_reader
         self.df = data_reader.read_data()
@@ -61,6 +63,8 @@ class DataPreparator:
 
 
 class AdultDataPreparator(DataPreparator):
+    """DataPreparator configured for Adult dataset with standard preprocessing steps."""
+
     def __init__(self, sens_attr_name: str, additional_steps: list[PreprocessingOperation] | None = None):
         if not additional_steps:
             additional_steps = []
@@ -70,6 +74,8 @@ class AdultDataPreparator(DataPreparator):
 
 
 class GermanDataPreparator(DataPreparator):
+    """DataPreparator configured for German Credit dataset with standard preprocessing steps."""
+
     def __init__(self, sens_attr_name: str, additional_steps: list[PreprocessingOperation] | None = None):
         if not additional_steps:
             additional_steps = []
@@ -79,6 +85,8 @@ class GermanDataPreparator(DataPreparator):
 
 
 class LawDataPreparator(DataPreparator):
+    """DataPreparator configured for Law School dataset with standard preprocessing steps."""
+
     def __init__(self, sens_attr_name: str, additional_steps: list[PreprocessingOperation] | None = None):
         if not additional_steps:
             additional_steps = []

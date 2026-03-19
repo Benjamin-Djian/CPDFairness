@@ -14,6 +14,8 @@ logger = LoggerFactory.get_logger(name=__name__)
 
 
 class TrainHistory:
+    """Tracks training and validation loss/accuracy across epochs."""
+
     def __init__(self, train_loss: list[float], train_acc: list[float], val_loss: list[float], val_acc: list[float]):
         self.nbr_epochs = len(train_loss)
         self.train_loss = train_loss
@@ -54,6 +56,8 @@ class TrainHistory:
 
 
 class Trainer:
+    """Trainer for BinaryClassificator with evaluation and training methods."""
+
     def __init__(self, model: BinaryClassificator, loss_fctn: nn.Module, optimizer: Optimizer):
         self.model = model
         self.optimizer = optimizer

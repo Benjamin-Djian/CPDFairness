@@ -11,6 +11,7 @@ logger = LoggerFactory.get_logger(name=__name__)
 
 
 class LoadModelExperiment(Experiment):
+    """Load pre-trained model and recompute histograms and likelihoods."""
 
     def run(self, save_dir: Path):
         logger.info("===== Running Experiment =====")
@@ -45,6 +46,8 @@ class LoadModelExperiment(Experiment):
 
 
 class LoadModelHistExperiment(Experiment):
+    """Load pre-trained model and histograms, then recompute likelihoods."""
+
     def run(self, save_dir: Path):
         logger.info("===== Running Experiment =====")
         logger.info("Preprocessing data")

@@ -6,6 +6,8 @@ import src.utils.env as e
 
 
 class LoggerFactory:
+    """Factory for creating configured Python loggers."""
+
     _initialized = False
 
     def __init__(self, log_file: Path | None = None, log_format=e.LOG_FORMAT):

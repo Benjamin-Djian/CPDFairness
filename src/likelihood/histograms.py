@@ -13,6 +13,8 @@ logger = LoggerFactory.get_logger(name=__name__)
 
 
 class Histogram(ABC):
+    """Represents a histogram of neuron activations for a single node."""
+
     def __init__(self, node_id: int, bins: np.ndarray, freq: np.ndarray):
         self.node_id = node_id
         if len(bins) < 2:
@@ -32,6 +34,8 @@ class Histogram(ABC):
 
 
 class UniBinHistogram(Histogram):
+    """Histogram with a single bin for zero-variance activations."""
+
     def __init__(self, node_id: int, bins: np.ndarray, freq: np.ndarray):
         if bins.shape[0] > 2:
             raise ValueError(f"Histogram with only one bin has too many bin values {bins.shape[0]}")
@@ -47,6 +51,8 @@ class UniBinHistogram(Histogram):
 
 
 class MultiBinsHistogram(Histogram):
+    """Histogram with multiple bins for diverse activation distributions."""
+
     def compute_hist_prob(self, activation: float) -> float:
         if (activation - self.lower_bound) < -e.EPSILON:
             return e.LOW_SMOOTHED_PROB
@@ -64,6 +70,8 @@ class MultiBinsHistogram(Histogram):
 
 
 class HistogramConstructor:
+    """Builds histograms from neuron activations extracted via ActivationExtractor."""
+
     def __init__(self, node_id, act_extract: ActivationExtractor):
         self.node_id = node_id
         self.extractor = act_extract

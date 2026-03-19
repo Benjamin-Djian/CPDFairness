@@ -24,6 +24,8 @@ logger = LoggerFactory.get_logger(name=__name__)
 
 
 class Experiment(ABC):
+    """Base class for CPD fairness experiments with model training and likelihood computation."""
+
     def __init__(self, config_path: Path):
         self.config: Config = load_config(config_path)
         self.data_preparator = self.config.build_preparator()

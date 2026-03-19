@@ -13,6 +13,8 @@ logger = LoggerFactory.get_logger(name=__name__)
 
 
 class FileWriter(ABC):
+    """Abstract base class for writing data to CSV files."""
+
     def __init__(self, header: dict[str, type], sep: str = ","):
         self.header = header
         self.sep = sep
@@ -36,6 +38,8 @@ class FileWriter(ABC):
 
 
 class ActivationWriter(FileWriter):
+    """Writes neural network contribution data (ActivationGetter object) to CSV."""
+
     def __init__(self, sep: str = ','):
         super().__init__(header=e.CONTRIBS_HEADER, sep=sep)
 
@@ -50,6 +54,8 @@ class ActivationWriter(FileWriter):
 
 
 class HistWriter(FileWriter):
+    """Writes histogram data (Histogram object) to CSV files."""
+
     def __init__(self, sep: str = ','):
         super().__init__(header=e.HIST_HEADER, sep=sep)
 
@@ -79,6 +85,8 @@ class HistWriter(FileWriter):
 
 
 class LikelihoodWriter(FileWriter):
+    """Writes likelihood score data (LikelihoodScore object) to CSV files."""
+
     def __init__(self, sep: str = ','):
         super().__init__(header=e.LH_HEADER, sep=sep)
 
