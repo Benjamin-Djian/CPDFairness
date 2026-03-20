@@ -21,7 +21,7 @@ dev = ["pytest>=8.0"]
 
 [project]
 name = "CPDFairness"
-version = "0.2.0"
+version = "0.3.0"
 description = "Compute and analyse CPD distribution between demographic groups."
 
 [project.urls]

@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import List, Literal, ClassVar
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 from torch import nn
 
 from src.preprocessing.data_preparator import DataPreparator, AdultDataPreparator, GermanDataPreparator, \
@@ -49,6 +49,35 @@ class DataConfig(BaseModel):
     valid_split: float = Field(..., ge=0, le=1)
     batch_size: int = Field(..., gt=0)
 
+    DEFAULT_FAVORABLE: ClassVar[dict[str, int]] = {
+        "adult": 1,
+        "german": 1,
+        "law": 1,
+    }
+
+    DEFAULT_PRIVILEGED: ClassVar[dict[tuple[str, str], int]] = {
+        ("adult", "sex"): 1,
+        ("german", "Age_in_years"): 1,
+        ("law", "race"): 1,
+    }
+
+    @computed_field
+    @property
+    def favorable_class(self) -> int:
+        try:
+            return self.DEFAULT_FAVORABLE[self.dataset]
+        except KeyError:
+            raise ValueError(f"Unknown dataset '{self.dataset}'")
+
+    @computed_field
+    @property
+    def privileged_group(self) -> int:
+        key = (self.dataset, self.sens_attr)
+        try:
+            return self.DEFAULT_PRIVILEGED[key]
+        except KeyError:
+            raise ValueError(f"Unknown dataset '{self.dataset}'")
+
     preparators: ClassVar[dict[str, type]] = {
         "adult": AdultDataPreparator,
         "german": GermanDataPreparator,
@@ -90,12 +119,14 @@ class FairnessConfig(BaseModel):
     correlation_remover: bool
     disparate_impact_remover: bool
 
-    def build(self, sens_attr: str) -> List[PreprocessingOperation]:
+    def build(self, sens_attr: str, favorable_class: int, privileged_group: int) -> List[PreprocessingOperation]:
         steps = []
         if self.correlation_remover:
             steps.append(CorrelationRemoverPrepro(sens_attr_name=sens_attr))
         if self.disparate_impact_remover:
-            steps.append(DisparateImpactRemoverPrepro(sens_attr_name=sens_attr))
+            steps.append(DisparateImpactRemoverPrepro(sens_attr_name=sens_attr,
+                                                      favorable_class=favorable_class,
+                                                      privileged_group=privileged_group))
         return steps
 
 
@@ -107,10 +138,16 @@ class PreprocessingConfig(BaseModel):
     class_balance: ClassBalanceConfig
     fairness: FairnessConfig
 
-    def build(self, seed: int, sens_attr: str) -> list[PreprocessingOperation]:
+    def build(self,
+              seed: int,
+              sens_attr: str,
+              favorable_class: int,
+              privileged_group: int) -> list[PreprocessingOperation]:
         steps = []
         steps.extend(self.class_balance.build(seed))
-        steps.extend(self.fairness.build(sens_attr))
+        steps.extend(self.fairness.build(sens_attr=sens_attr,
+                                         favorable_class=favorable_class,
+                                         privileged_group=privileged_group))
         return steps
 
 
@@ -195,8 +232,9 @@ class Config(BaseModel):
     def build_preparator(self) -> DataPreparator:
         steps = self.preprocessing.build(
             seed=self.experiment.seed,
-            sens_attr=self.data.sens_attr
-        )
+            sens_attr=self.data.sens_attr,
+            favorable_class=self.data.favorable_class,
+            privileged_group=self.data.privileged_group)
         return self.data.build_preparator(additional_steps=steps)
 
 

@@ -1,6 +1,12 @@
+import warnings
 from abc import ABC, abstractmethod
 
 import pandas as pd
+
+with warnings.catch_warnings(action="ignore"):
+    from aif360.algorithms.preprocessing import DisparateImpactRemover
+from aif360.datasets import StandardDataset
+from fairlearn.preprocessing import CorrelationRemover
 from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
 from pandas.core.dtypes.common import is_numeric_dtype
@@ -14,6 +20,8 @@ logger = LoggerFactory.get_logger(name=__name__)
 
 
 class PreprocessingOperation(BaseEstimator, TransformerMixin, ABC):
+    """Base class for sklearn-compatible preprocessing operations on IndexDataset."""
+
     @abstractmethod
     def fit(self, X: IndexDataset, y=None):
         pass
@@ -23,7 +31,9 @@ class PreprocessingOperation(BaseEstimator, TransformerMixin, ABC):
         pass
 
 
-class MakeCategorical(BaseEstimator, TransformerMixin):
+class MakeCategorical(PreprocessingOperation):
+    """One-hot encodes categorical columns with cardinality between lower and upper bounds."""
+
     def __init__(self, lb: int, ub: int):
         self.lb = lb
         self.ub = ub
@@ -32,7 +42,6 @@ class MakeCategorical(BaseEstimator, TransformerMixin):
         self.encoded_column_names_ = None
 
     def fit(self, X: IndexDataset, y=None):
-        logger.debug("Fitting One Hot Encoding")
         self.categorical_columns_ = X.df.select_dtypes(exclude=['number', 'bool']).columns.tolist()
         self.categorical_columns_ = [c for c in self.categorical_columns_ if c not in [X.target_name, X.sens_attr_name]]
         self.encoder_ = OneHotEncoder(handle_unknown='ignore', sparse_output=False)
@@ -43,7 +52,6 @@ class MakeCategorical(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X: IndexDataset) -> IndexDataset:
-        logger.debug("Starting One Hot Encoding")
         res = X.copy()
         if not self.categorical_columns_:
             return res
@@ -63,7 +71,6 @@ class Scale(PreprocessingOperation):
         self.numeric_columns_ = None
 
     def fit(self, X: IndexDataset, y=None):
-        logger.debug("Fitting Scaling")
         self.numeric_columns_ = [c for c in X.df.columns if
                                  (is_numeric_dtype(X.df[c])) and c not in [X.target_name, X.sens_attr_name]]
         self.scaler_ = MinMaxScaler()
@@ -75,7 +82,6 @@ class Scale(PreprocessingOperation):
         return self
 
     def transform(self, X: IndexDataset) -> IndexDataset:
-        logger.debug("Starting Scaling")
         if self.numeric_columns_:
             new_df = X.copy()
             new_df.df[self.numeric_columns_] = self.scaler_.transform(X.df[self.numeric_columns_])
@@ -92,12 +98,10 @@ class ToFloat(PreprocessingOperation):
         self.fitted_ = None
 
     def fit(self, X: IndexDataset, y=None):
-        logger.debug("Fitting float conversion")
         self.fitted_ = True
         return self
 
     def transform(self, X: IndexDataset) -> IndexDataset:
-        logger.debug("Starting float conversion")
         new_X = X.copy()
         new_X.df = new_X.df.astype(float)
         return new_X
@@ -110,12 +114,10 @@ class TargetAtTheEnd(PreprocessingOperation):
         self.fitted_ = None
 
     def fit(self, X: IndexDataset, y=None):
-        logger.debug("Fitting column reorder")
         self.fitted_ = True
         return self
 
     def transform(self, X: IndexDataset) -> IndexDataset:
-        logger.debug("Starting column reorder")
         cols = [c for c in X.df.columns if c != X.target_name] + [X.target_name]
         new_df = X.copy()
         new_df.df = new_df.df[cols]
@@ -123,15 +125,15 @@ class TargetAtTheEnd(PreprocessingOperation):
 
 
 class DownSampling(PreprocessingOperation):
+    """Undersamples majority class to balance dataset."""
+
     def __init__(self, seed):
         self.rus_ = RandomUnderSampler(sampling_strategy='majority', random_state=seed)
 
     def fit(self, X: IndexDataset, y=None):
-        logger.debug("Fitting downsampling")
         return self
 
     def transform(self, X: IndexDataset) -> IndexDataset:
-        logger.debug("Starting downsampling")
         res_X = X.df.drop(columns=[X.target_name])
         res_y = X.df[X.target_name]
         res_X_resampled, res_y_resampled = self.rus_.fit_resample(res_X, res_y)
@@ -140,70 +142,75 @@ class DownSampling(PreprocessingOperation):
 
 
 class UpSampling(PreprocessingOperation):
+    """Oversamples minority class to balance dataset."""
+
     def __init__(self, seed):
         self.ros_ = RandomOverSampler(sampling_strategy='minority', random_state=seed)
 
     def fit(self, X: IndexDataset, y=None):
-        logger.debug("Fitting upsampling")
         return self
 
     def transform(self, X: IndexDataset) -> IndexDataset:
-        logger.debug("Starting upsampling")
         res_X = X.df.drop(columns=[X.target_name])
         res_y = X.df[X.target_name]
         res_X_resampled, res_y_resampled = self.ros_.fit_resample(res_X, res_y)
         res_df = pd.concat([res_X_resampled, res_y_resampled], axis=1)
         return X.create_from_df(res_df)
 
-# class CorrelationRemoverPrepro(PreprocessingOperation):
-#
-#     def __init__(self, sens_attr_name: str):
-#         from fairlearn.preprocessing import CorrelationRemover
-#         self.cr = CorrelationRemover(sensitive_feature_ids=[sens_attr_name])
-#
-#     def fit(self, X: IndexDataset, y: pd.Series):
-#         self.cr.fit(X=df, y=df[target_name])
-#
-#     def transform(self, X: IndexDataset) -> IndexDataset:
-#         target_col = df[target_name]
-#         index_col = df.index
-#
-#         X_cr = self.cr.transform(X=df)
-#         cr_col = list(df.columns)
-#         cr_col.remove(sens_attr_name)
-#         X_cr = pd.DataFrame(X_cr, columns=cr_col)
-#         X_cr.index = index_col
-#         X_cr[sens_attr_name] = df[sens_attr_name]
-#         X_cr[target_name] = target_col
-#
-#         X_cr = X_cr[list(df.columns)]
-#         return X_cr
-#
-#
-# class DisparateImpactRemoverPrepro(PreprocessingOperation):
-#     def __init__(self, sens_attr_name: str):
-#         from aif360.algorithms.preprocessing import DisparateImpactRemover
-#         self.dir = DisparateImpactRemover(sensitive_attribute=sens_attr_name)
-#         self.standard_data = None
-#
-#     def fit(self, X: IndexDataset, y: pd.Series):
-#         self.standard_data = StandardDataset(df=df,
-#                                              label_name=target_name,
-#                                              protected_attribute_names=[sens_attr_name],
-#                                              favorable_classes=favorable_classes,
-#                                              # Label that is considered as positive
-#                                              privileged_classes=privileged_classes)  # protected attr that are considered privileged
-#         self.dir.fit(self.standard_data)
-#
-#     def transform(self, X: IndexDataset) -> IndexDataset:
-#         self.standard_data = StandardDataset(df=df,
-#                                              label_name=target_name,
-#                                              protected_attribute_names=[sens_attr_name],
-#                                              favorable_classes=favorable_classes,
-#                                              # Label that is considered as positive
-#                                              privileged_classes=privileged_classes)  # protected attr that are considered privileged
-#         data_dir = self.dir.transform(self.standard_data)
-#         data_dir, _ = data_dir.convert_to_dataframe()
-#         data_dir = data_dir[list(df.columns)]
-#         data_dir.index = data_dir.index.astype(int)
-#         return data_dir
+
+class CorrelationRemoverPrepro(PreprocessingOperation):
+    """Apply Correlation Remover algorithm from FairLearn"""
+
+    def __init__(self, sens_attr_name: str):
+        self.cr_ = None
+        self.sens_attr_name_ = sens_attr_name
+
+    def fit(self, X: IndexDataset, y=None):
+        self.cr_ = CorrelationRemover(sensitive_feature_ids=[self.sens_attr_name_])
+
+    def transform(self, X: IndexDataset) -> IndexDataset:
+        cr_col = list(X.df.columns)
+        cr_col.remove(self.sens_attr_name_)
+
+        df_cr = self.cr_.transform(X=X.df)
+        df_cr = pd.DataFrame(df_cr, columns=cr_col)
+        df_cr.index = X.df.index
+        df_cr[self.sens_attr_name_] = X.df[self.sens_attr_name_]
+        df_cr[X.target_name] = X.df[X.target_name]
+
+        df_cr = df_cr[list(X.df.columns)]
+        X_cr = X.create_from_df(df_cr)
+        return X_cr
+
+
+class DisparateImpactRemoverPrepro(PreprocessingOperation):
+    """Applies Disparate Impact Remover algorithm from aif360."""
+
+    def __init__(self, sens_attr_name: str, favorable_class: int, privileged_group: int):
+        self.dir_ = None
+        self.standard_data_ = None
+        self.sens_attr_name_ = sens_attr_name
+        self.favorable_class_ = favorable_class
+        self.privileged_group_ = privileged_group
+
+    def fit(self, X: IndexDataset, y=None):
+        self.dir_ = DisparateImpactRemover(sensitive_attribute=self.sens_attr_name_)
+        self.standard_data_ = StandardDataset(df=X.df,
+                                              label_name=X.target_name,
+                                              protected_attribute_names=[self.sens_attr_name_],
+                                              favorable_classes=[self.favorable_class_],
+                                              privileged_classes=[[self.privileged_group_]])
+        self.dir_.fit(self.standard_data_)
+
+    def transform(self, X: IndexDataset) -> IndexDataset:
+        self.standard_data_ = StandardDataset(df=X.df,
+                                              label_name=X.target_name,
+                                              protected_attribute_names=[self.sens_attr_name_],
+                                              favorable_classes=[self.favorable_class_],
+                                              privileged_classes=[[self.privileged_group_]])
+        data_dir = self.dir_.transform(self.standard_data_)
+        data_dir, _ = data_dir.convert_to_dataframe()
+        data_dir = data_dir[list(X.df.columns)]
+        data_dir.index = data_dir.index.astype(int)
+        X_dir = X.create_from_df(data_dir)
+        return X_dir

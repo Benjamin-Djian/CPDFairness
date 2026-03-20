@@ -26,7 +26,9 @@ def valid_config_dict():
             "sens_attr": "sex",
             "train_split": 0.8,
             "valid_split": 0.1,
-            "batch_size": 32
+            "batch_size": 32,
+            "favorable_class": 0,
+            "privileged_group": 0
         },
         "preprocessing": {
             "class_balance": {

@@ -34,9 +34,10 @@ Soon available
 # Roadmap
 
 - [x] Better configuration readability and validation
-- [ ] CR and DIR
-- [ ] Update tests (measure coverage)
+- [x] CR and DIR
 - [x] Add docstring
+- [ ] Update tests (measure coverage)
+- [ ] Permit binarization of attribute to consider them as sensitive
 - [ ] Post experiment
 - [ ] Update main.py
 
