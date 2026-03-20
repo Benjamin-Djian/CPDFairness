@@ -17,12 +17,16 @@ license = "MIT"
 requires-python = ">=3.12"
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0"]
+dev = ["pytest>=8.0", "coverage>=7.13"]
 
 [project]
 name = "CPDFairness"
-version = "0.3.0"
+version = "0.4.0"
 description = "Compute and analyse CPD distribution between demographic groups."
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
 
 [project.urls]
 Repository = "https://github.com/Benjamin-Djian/CPDFairness"
